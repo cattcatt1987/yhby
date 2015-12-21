@@ -149,7 +149,7 @@ public class PhoneResourceRESTService
 		Map<String, Object> req = new HashMap<>();
 		JSONObject obj = JSONObject.parseObject(params);
 		
-		//用户信息、套餐信息，
+		//用户信息、套餐信息
 		
 		String uno = obj.getString("uno");
 		String prod_no = Objects.toString(obj.getString("packageNo"), "0");
