@@ -5,8 +5,8 @@ public enum OrderUseStatus
 	PERPARE("待使用", 1),
 	USING("已取消", 2),
 	FINISHED("已用完", 3),
-	INVALID("已失效", 4),
-	;
+	INVALID("已失效", 4);
+	
 	private String name;
 	private int index;
 

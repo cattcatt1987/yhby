@@ -135,7 +135,7 @@ public class TranslateResourceRESTService
 		Constant.calleeMap.put(caller, call3_result);
 		//清除第三方通话号码记录
 		Constant.call3Map.remove(caller);
-		
+		System.out.println("caller:"+caller+"|result:"+call3_result);
 		req.put("result", "success");
 		req.put("error_code", "000000");
 		req.put("error_msg", "");
@@ -200,12 +200,12 @@ public class TranslateResourceRESTService
 		String user_id = Objects.toString(obj.get("user_id"), "null");
 		String caller = Objects.toString(obj.get("caller"), "");
 		String callee = Objects.toString(obj.get("callee"), "");
-		String language = Objects.toString(obj.get("language"), "");
+		String language = Objects.toString(obj.get("language"), "null");
 		String workId = Objects.toString(obj.get("workId"), "");
 
         Member member = memberBean.findMember(user_id,"");
 
-
+        System.out.println("lan:"+language);
         MemberPackage mp = memberPackageBean.findMemberPackage(member.getMemberNumber(),
 				language);
 		Account account = accountBean.findByMemberNo(member.getMemberNumber());

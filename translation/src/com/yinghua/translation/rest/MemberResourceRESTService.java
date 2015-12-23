@@ -388,7 +388,8 @@ public class MemberResourceRESTService
 		
 						member.setLongitude(obj.getString("longitude"));
 						member.setLatitude(obj.getString("latitude"));
-						member.setLocation(obj.getString("address"));
+//						member.setLocation(obj.getString("address"));
+						member.setIsCompleted(1);
 						repository.updateMember(member);
 						
 		
@@ -408,9 +409,13 @@ public class MemberResourceRESTService
 				req.put("uno", member.getMemberNumber());
 				req.put("completed", member.getIsCompleted().toString());
 				req.put("name", member.getMemberName());
+				req.put("nickname", member.getNickname());
+				req.put("email", member.getEmail());
 				req.put("gender", member.getMemberGender());
 				req.put("mobile", member.getMobilePhone());
+				req.put("localation", member.getLocation());
 				req.put("local_lang", member.getLocalLang());
+				req.put("credentials_number", member.getCredentialsNumber());
 				req.put("user_type", member.getMemberType());
 				req.put("cmpy_id", member.getCmpyId());
 				req.put("avator", member.getMemberFace());

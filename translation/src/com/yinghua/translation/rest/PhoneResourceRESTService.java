@@ -33,8 +33,11 @@ import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 
 import com.alibaba.fastjson.JSONObject;
 import com.pingplusplus.model.Charge;
@@ -156,7 +159,7 @@ public class PhoneResourceRESTService
 		Float orderPrice = obj.getFloat("price");
 		int price = (int)(orderPrice*100);
 		String pay_way = obj.getString("pay_way");
-		Date service_time = obj.getDate("service_time");
+		String service_time = obj.getString("service_time");
 		int use_date = obj.getIntValue("use_date");
 		
 		PackageProduct packageProduct = packageProductBean.findByPackageNo(prod_no);
@@ -171,7 +174,12 @@ public class PhoneResourceRESTService
 			order.setPackageType(packageProduct.getType());
 			order.setPackageDesc(packageProduct.getDesc());
 			order.setOrderNo(OrderNoUtil.getOrderNo("OR"));
-			order.setServiceTime(service_time);
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+			try {
+				order.setServiceTime(sdf.parse(service_time));
+			} catch (ParseException e1) {
+				e1.printStackTrace();
+			}
 			order.setSurplusCallDuration(packageProduct.getSurplusCallDuration()*use_date);
 			order.setUseDate(use_date);
 			order.setUseState(OrderUseStatus.PERPARE);
@@ -279,6 +287,74 @@ public class PhoneResourceRESTService
 						req.put("error_msg", "");
 						break;
 				}
+			}
+			
+		}else{
+			req.put("result", "fail");
+			req.put("error_code", "5005");
+			req.put("error_msg", "商品不存在");
+		}
+		return req;
+	}
+	
+	
+	/**
+	 * 用户生成订单
+	 * 
+	 * @param params
+	 * @return
+	 */
+	@POST
+	@Path("/preBankOrder")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> preBankOrder(String params)
+	{
+		Map<String, Object> req = new HashMap<>();
+		JSONObject obj = JSONObject.parseObject(params);
+		
+		//用户信息、套餐信息
+		
+		String uno = obj.getString("uno");
+		String prod_no = Objects.toString(obj.getString("packageNo"), "0");
+		Float orderPrice = obj.getFloat("price");
+		String pay_way = obj.getString("pay_way");
+		String service_time = obj.getString("service_time");
+		int use_date = obj.getIntValue("use_date");
+		
+		PackageProduct packageProduct = packageProductBean.findByPackageNo(prod_no);
+		
+		if(packageProduct!=null){
+			//插入用户订单表
+			MemberOrder order = new MemberOrder();
+			order.setMemberNumber(uno);
+			order.setOrderTime(new Date());
+			order.setPackageNo(prod_no);
+			order.setPackageName(packageProduct.getSubject());
+			order.setPackageType(packageProduct.getType());
+			order.setPackageDesc(packageProduct.getDesc());
+			order.setOrderNo(OrderNoUtil.getOrderNo("OR"));
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+			try {
+				order.setServiceTime(sdf.parse(service_time));
+			} catch (ParseException e1) {
+				e1.printStackTrace();
+			}
+			order.setSurplusCallDuration(packageProduct.getSurplusCallDuration()*use_date);
+			order.setUseDate(use_date);
+			order.setUseState(OrderUseStatus.PERPARE);
+			order.setState(OrderStatus.CREATED);
+			order.setOrderPrice(String.valueOf(orderPrice));
+			order.setPayWay(pay_way);
+			
+			Long id = memberOrderBean.createOrder(order);
+			
+			if (id > 0)
+			{
+				//生成订单对象返回给app
+				req.put("result", "success");
+				req.put("error_code", "000000");
+				req.put("error_msg", "");
 			}
 			
 		}else{
@@ -547,7 +623,97 @@ public class PhoneResourceRESTService
 	}
 	
 	/**
-	 * 发送第三方通话号码
+	 * 接通客席通话状态接口
+	 * 
+	 * @param params
+	 * @return
+	 */
+	@POST
+	@Path("/callerStatus")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> callerStatus(String params)
+	{
+		JSONObject obj = JSONObject.parseObject(params);
+		String caller = Objects.toString(obj.get("caller"), "null");
+		Map<String, Object> req = new HashMap<>();
+		try
+		{
+			String status = "error";
+			String call_id = Constant.callerMap.get(caller);
+			if(call_id!=null&&call_id.length()>0){
+				status = "ok";
+				Constant.callerMap.remove(caller);
+			}
+			System.out.println("客户端查看坐席接通状态");
+			System.out.println("caller:"+caller+",call_id:"+call_id);
+			req.put("result", "success");
+			req.put("status", status);
+			req.put("error_code", "000000");
+			req.put("error_msg", "");
+
+		}
+		catch (Exception e)
+		{
+			log.info(e.getMessage());
+			req.put("result", "fail");
+			req.put("error_code", "7001");
+			req.put("error_msg", "");
+		}
+
+		return req;
+	}
+	
+	/**
+	 * 接通三方通话状态接口
+	 * 
+	 * @param params
+	 * @return
+	 */
+	@POST
+	@Path("/caller3Status")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> caller3Status(String params)
+	{
+		JSONObject obj = JSONObject.parseObject(params);
+		String caller = Objects.toString(obj.get("caller"), "null");
+		Map<String, Object> req = new HashMap<>();
+		// 此处更新三方通话号码
+		try
+		{
+			String status = "error";
+			String result = Constant.calleeMap.get(caller);
+			if("1".equals(result)){
+				status = "ok";
+				Constant.calleeMap.remove(caller);
+			}else if("2".equals(result)){
+				status = "end";
+				Constant.calleeMap.remove(caller);
+			}
+			System.out.println("APP查看第三方接通状态");
+			System.out.println("caller:"+caller+",result:"+status);
+			req.put("result", "success");
+			req.put("status", status);
+			req.put("error_code", "000000");
+			req.put("error_msg", "");
+
+		}
+		catch (Exception e)
+		{
+			log.info(e.getMessage());
+			req.put("result", "fail");
+			req.put("error_code", "7001");
+			req.put("error_msg", "");
+		}
+
+		return req;
+	}
+
+	
+	
+	/**
+	 * 接收ping++异步支付结果通知
 	 * 
 	 * @param params
 	 * @return
@@ -580,5 +746,44 @@ public class PhoneResourceRESTService
 		return req;
 	}
 	
+	
+	/**
+	 * 接收首信易支付异步支付结果通知
+	 * 
+	 * @param params
+	 * @return
+	 */
+	@POST
+	@Path("/billNotify")
+//	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	@Produces(MediaType.TEXT_PLAIN)
+	public String billNotify(@QueryParam("v_count") int count,@QueryParam("v_oid") String oids,@QueryParam("v_pmode") String pmodes,@QueryParam("v_pstatus") String pstatus,@QueryParam("v_pstring") String pstrings,
+			@QueryParam("v_amount") String amounts,@QueryParam("v_moneytype") String moneytype,@QueryParam("v_mac") String mac,@QueryParam("v_md5money") String md5money,@QueryParam("v_sign") String sign)
+	{
+		String result = "error";
+		try{
+			if(count>0){
+				String regex = "\\|_\\|";
+				String[] oid = oids.split(regex);
+				String[] status = pstatus.split(regex);
+				for (int i = 0; i < count; i++) {
+					if(oid[i]!=null){
+						String orderNo = Objects.toString(oid[i]);
+						MemberOrder order = memberOrderBean.findByOrderNo(orderNo);
+						if(order!=null&&"1".equals(status[i])){
+							order.setState(OrderStatus.FINISHED);
+							memberOrderBean.updateOrder(order);
+							System.out.println("orderNo:"+order+OrderStatus.FINISHED);
+						}else{
+						 //记录日志
+						}
+					}
+				}
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		return result;
+	}
 	
 }

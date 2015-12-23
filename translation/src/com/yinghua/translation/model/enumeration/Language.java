@@ -20,7 +20,8 @@ public enum Language
 	DE("德语",8),
 	PT("葡萄牙语",9),
 	MSG("消息",10),
-	VOIP("VOIP",11);
+	VOIP("VOIP",11),
+	CS("客服",12);
 	private String name;
 	private int index;
 
@@ -69,6 +70,9 @@ public enum Language
 			case 11:
 				us = Language.VOIP;
 				break;
+			case 12:
+				us = Language.CS;
+				break;
 		}
 		return us;
 	}
@@ -110,6 +114,9 @@ public enum Language
 				break;
 			case "VOIP":
 				us = 11;
+				break;
+			case "CS":
+				us = 12;
 				break;
 		}
 		return us;
