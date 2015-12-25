@@ -32,7 +32,6 @@ import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
-import javax.swing.UIDefaults;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -874,6 +873,36 @@ public class MemberResourceRESTService
 	}
 
 	/**
+	 * 获取用户个人头像
+	 * @param params
+	 * @return
+	 */
+	@POST
+	@Path("/getUserHead")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> getUserHead(String params)
+	{
+		Map<String, Object> req = new HashMap<>();
+		JSONObject obj = JSONObject.parseObject(params);
+		//String uid = Objects.toString(obj.get("uid"), "0");
+		Member mem = repository.findByMemberNo(Objects.toString(obj.get("uno"), "0"));
+
+		if (mem != null)
+		{
+			
+		}
+		else
+		{
+			req.put("error_code", "4022");
+			req.put("error_msg", "查无用户信息");
+		}
+
+		return req;
+	}
+	
+	
+	/**
 	 * 获取用户信息
 	 * @param params
 	 * @return
@@ -1026,6 +1055,7 @@ public class MemberResourceRESTService
 	 * @param params
 	 * @return
 	 */
+	
 	@POST
 	@Path("/getUserSimpleInfo")
 	@Consumes(MediaType.APPLICATION_JSON)

@@ -16,6 +16,7 @@
  */
 package com.yinghua.translation.rest;
 
+
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;

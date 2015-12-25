@@ -217,33 +217,10 @@ public class TranslateResourceRESTService
 				- translate_start.getTime()) / (1000);
 		//此处填写逻辑，如果用户存在套餐，就扣套餐，不存在就扣标准费用
 
-
-		if(mp != null)// && )
-        {
-            Date date= mp.getTelPreferEnd();
-            if(date.getTime()>System.currentTimeMillis())
-            {
-               //do nothing
-            }
-            else if(mp.getTelGiftAmount()>0)
-            {
-                mp.setTelGiftAmount(mp.getTelGiftAmount() - callDuration.intValue());
-                memberPackageBean.updateMemberPackage(mp);
-            }
-            else
-            {
-                account.setAccountBalance(account.getAccountBalance().subtract(
-                        lan.getTariff().multiply(BigDecimal.valueOf(callDuration))));
-                accountBean.updateAccount(account);
-            }
-        }
-        else
-        {
-        	account.setSurplusCallDuration(account.getSurplusCallDuration()-callDuration.intValue());
-//            account.setAccountBalance(account.getAccountBalance().subtract(
-//                    lan.getTariff().multiply(BigDecimal.valueOf(callDuration))));
+		if(account!=null){
+        	account.setSurplusCallDuration(account.getSurplusCallDuration()-(int)(callDuration*lan.getRate()));
             accountBean.updateAccount(account);
-        }
+		}
 
 
 		// 记录翻译记录

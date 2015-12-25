@@ -4,8 +4,8 @@ public enum OrderUseStatus
 {
 	PERPARE("待使用", 1),
 	USING("已取消", 2),
-	FINISHED("已用完", 3),
-	INVALID("已失效", 4);
+	INVALID("已失效", 3),
+	FINISHED("已用完", 4);
 	
 	private String name;
 	private int index;
@@ -29,10 +29,10 @@ public enum OrderUseStatus
 				us = OrderUseStatus.USING;
 				break;
 			case 3:
-				us = OrderUseStatus.FINISHED;
+				us = OrderUseStatus.INVALID;
 				break;
 			case 4:
-				us = OrderUseStatus.INVALID;
+				us = OrderUseStatus.FINISHED;
 				break;
 				
 		}

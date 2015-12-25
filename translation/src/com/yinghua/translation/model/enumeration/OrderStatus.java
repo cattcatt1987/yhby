@@ -24,22 +24,22 @@ public enum OrderStatus
 		OrderStatus us = null;
 		switch (index)
 		{
-			case 0:
+			case 1:
 				us = OrderStatus.CREATED;
 				break;
-			case 1:
+			case 2:
 				us = OrderStatus.CANCELLED;
 				break;
-			case 2:
+			case 3:
 				us = OrderStatus.PAY_SUCCESS;
 				break;
-			case 3:
+			case 4:
 				us = OrderStatus.FINISHED;
 				break;
-			case 4:
+			case 5:
 				us = OrderStatus.REFOUNDED;
 				break;
-			case 5:
+			case 6:
 				us = OrderStatus.INVALID;
 				break;
 				

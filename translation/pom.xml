@@ -253,6 +253,13 @@
 			<version>3.0.10.Final</version>
 			<scope>provided</scope>
 		</dependency>
+<!-- 
+		<dependency>
+			<groupId>io.swagger</groupId>
+			<artifactId>swagger-jaxrs</artifactId>
+			<version>1.5.3</version>
+		</dependency>
+ -->
   </dependencies>
   <build>
     <plugins>

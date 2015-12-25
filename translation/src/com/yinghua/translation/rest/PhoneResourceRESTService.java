@@ -17,6 +17,8 @@
 package com.yinghua.translation.rest;
 
 import java.math.BigDecimal;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -31,6 +33,7 @@ import javax.ejb.EJB;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -38,6 +41,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+
+import org.apache.http.client.utils.URLEncodedUtils;
 
 import com.alibaba.fastjson.JSONObject;
 import com.pingplusplus.model.Charge;
@@ -50,6 +55,7 @@ import com.yinghua.translation.model.Member;
 import com.yinghua.translation.model.MemberOrder;
 import com.yinghua.translation.model.Order;
 import com.yinghua.translation.model.PackageProduct;
+import com.yinghua.translation.model.PayEasyLog;
 import com.yinghua.translation.model.Product;
 import com.yinghua.translation.model.TranslationRecord;
 import com.yinghua.translation.model.enumeration.OrderStatus;
@@ -60,6 +66,7 @@ import com.yinghua.translation.service.MemberBean;
 import com.yinghua.translation.service.MemberOrderBean;
 import com.yinghua.translation.service.OrderBean;
 import com.yinghua.translation.service.PackageProductBean;
+import com.yinghua.translation.service.PayEasyLogBean;
 import com.yinghua.translation.service.PaymentBean;
 import com.yinghua.translation.service.ProductBean;
 import com.yinghua.translation.util.ClassLoaderUtil;
@@ -92,7 +99,9 @@ public class PhoneResourceRESTService
 
 	@EJB
 	private OrderBean orderBean;
-
+	
+	@EJB
+	private PayEasyLogBean payEasyLogBean;
 	@EJB
 	private MemberOrderBean memberOrderBean;
 	
@@ -153,6 +162,7 @@ public class PhoneResourceRESTService
 		JSONObject obj = JSONObject.parseObject(params);
 		
 		//用户信息、套餐信息
+		String businessNo = "9056";
 		
 		String uno = obj.getString("uno");
 		String prod_no = Objects.toString(obj.getString("packageNo"), "0");
@@ -173,7 +183,13 @@ public class PhoneResourceRESTService
 			order.setPackageName(packageProduct.getSubject());
 			order.setPackageType(packageProduct.getType());
 			order.setPackageDesc(packageProduct.getDesc());
-			order.setOrderNo(OrderNoUtil.getOrderNo("OR"));
+			if("3".equals(pay_way)||"4".equals(pay_way)){
+				String str = new SimpleDateFormat("yyyyMMdd").format(new Date(System
+						.currentTimeMillis()));
+				order.setOrderNo(str+"-"+businessNo+"-"+OrderNoUtil.getOrderNo("OR"));
+			}else{
+				order.setOrderNo(OrderNoUtil.getOrderNo("OR"));
+			}
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
 			try {
 				order.setServiceTime(sdf.parse(service_time));
@@ -274,6 +290,8 @@ public class PhoneResourceRESTService
 						req.put("order_no", order.getOrderNo());
 						req.put("amount", order.getOrderPrice());
 						req.put("pay_way", order.getPayWay());
+						req.put("business_no", businessNo);
+						req.put("key", "test");
 //						req.put("credential", "");
 						req.put("error_code", "000000");
 						req.put("error_msg", "");
@@ -282,6 +300,8 @@ public class PhoneResourceRESTService
 						req.put("order_no", order.getOrderNo());
 						req.put("amount", order.getOrderPrice());
 						req.put("pay_way", order.getPayWay());
+						req.put("businessNo", businessNo);
+						req.put("key", "test");
 //						req.put("credential", "");
 						req.put("error_code", "000000");
 						req.put("error_msg", "");
@@ -733,10 +753,18 @@ public class PhoneResourceRESTService
 				 String orderNo = Objects.toString(object.get("order_no"),"0");
 				 MemberOrder order = memberOrderBean.findByOrderNo(orderNo);
 				 if(order!=null){
-					 order.setState(OrderStatus.FINISHED);
-					 memberOrderBean.updateOrder(order);
-					 System.out.println("orderNo:"+order+OrderStatus.FINISHED);
-					 
+					 if(order.getState()!=OrderStatus.FINISHED){
+						 order.setState(OrderStatus.FINISHED);
+						 if(System.currentTimeMillis()>=order.getServiceTime().getTime()){
+							 Account account = accountBean.findByMemberNo(order.getMemberNumber());
+							 int addCall = order.getSurplusCallDuration()+account.getSurplusCallDuration();
+							 account.setSurplusCallDuration(addCall);
+							 accountBean.updateAccount(account);
+							 order.setUseState(OrderUseStatus.USING);
+						 }
+						 memberOrderBean.updateOrder(order);
+						 System.out.println("orderNo:"+order.getOrderNo()+"|orderState:"+order.getState()+"|orderUseState:"+order.getUseState());
+					 }
 				 }else{
 					 //记录日志
 				 }
@@ -754,6 +782,7 @@ public class PhoneResourceRESTService
 	 * @return
 	 */
 	@POST
+	@GET
 	@Path("/billNotify")
 //	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	@Produces(MediaType.TEXT_PLAIN)
@@ -764,20 +793,49 @@ public class PhoneResourceRESTService
 		try{
 			if(count>0){
 				String regex = "\\|_\\|";
-				String[] oid = oids.split(regex);
-				String[] status = pstatus.split(regex);
-				for (int i = 0; i < count; i++) {
-					if(oid[i]!=null){
-						String orderNo = Objects.toString(oid[i]);
-						MemberOrder order = memberOrderBean.findByOrderNo(orderNo);
-						if(order!=null&&"1".equals(status[i])){
-							order.setState(OrderStatus.FINISHED);
-							memberOrderBean.updateOrder(order);
-							System.out.println("orderNo:"+order+OrderStatus.FINISHED);
-						}else{
-						 //记录日志
+				if(oids!=null&&pstatus!=null&&pmodes!=null&&pstrings!=null&&amounts!=null&&moneytype!=null){
+					String[] oid = oids.split(regex);
+					String[] status = pstatus.split(regex);
+					String[] pmode = pmodes.split(regex);
+					String[] pstring = pstrings.split(regex);
+					String[] amount = amounts.split(regex);
+					String[] mtype = moneytype.split(regex);
+					for (int i = 0; i < count; i++) {
+						if(oid[i]!=null){
+							String orderNo = Objects.toString(oid[i]);
+							MemberOrder order = memberOrderBean.findByOrderNo(orderNo);
+							if(order!=null&&"1".equals(status[i])){
+								if(order.getState()!=OrderStatus.FINISHED){//重复订单不计费
+									 order.setState(OrderStatus.FINISHED);
+									 if(System.currentTimeMillis()>=order.getServiceTime().getTime()){
+										 Account account = accountBean.findByMemberNo(order.getMemberNumber());
+										 int addCall = order.getSurplusCallDuration()+account.getSurplusCallDuration();
+										 account.setSurplusCallDuration(addCall);
+										 accountBean.updateAccount(account);
+										 order.setUseState(OrderUseStatus.USING);
+									 }
+									 memberOrderBean.updateOrder(order);
+									 System.out.println("orderNo:"+order.getOrderNo()+"|orderState:"+order.getState()+"|orderUseState:"+order.getUseState());
+								 }
+							}else{
+								System.out.println("订单不存在");
+							}
+							PayEasyLog payel = new PayEasyLog();
+							payel.setOid(oid[i]);
+							payel.setPstatus(status[i]);
+							System.out.println("pmode:"+new String(pmode[i].getBytes(), "gbk"));
+							System.out.println("pstring:"+URLDecoder.decode(pmode[i], "gbk"));
+							payel.setPmode(URLDecoder.decode(pmode[i], "utf-8"));
+							payel.setPstring(URLDecoder.decode(pstring[i], "utf-8"));
+							payel.setAmount(amount[i]);
+							payel.setMoneytype(mtype[i]);
+							payel.setMac(mac);
+							payel.setMd5money(md5money);
+							payel.setSign(sign);
+//							payEasyLogBean.create(payel);
 						}
 					}
+					result="send";
 				}
 			}
 		}catch(Exception e){
