@@ -16,6 +16,7 @@
  */
 package com.yinghua.translation.rest;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -33,6 +34,7 @@ import javax.ejb.EJB;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.Encoded;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -786,11 +788,11 @@ public class PhoneResourceRESTService
 	@Path("/billNotify")
 //	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	@Produces(MediaType.TEXT_PLAIN)
+	@Encoded
 	public String billNotify(@QueryParam("v_count") int count,@QueryParam("v_oid") String oids,@QueryParam("v_pmode") String pmodes,@QueryParam("v_pstatus") String pstatus,@QueryParam("v_pstring") String pstrings,
 			@QueryParam("v_amount") String amounts,@QueryParam("v_moneytype") String moneytype,@QueryParam("v_mac") String mac,@QueryParam("v_md5money") String md5money,@QueryParam("v_sign") String sign)
 	{
 		String result = "error";
-		try{
 			if(count>0){
 				String regex = "\\|_\\|";
 				if(oids!=null&&pstatus!=null&&pmodes!=null&&pstrings!=null&&amounts!=null&&moneytype!=null){
@@ -802,46 +804,53 @@ public class PhoneResourceRESTService
 					String[] mtype = moneytype.split(regex);
 					for (int i = 0; i < count; i++) {
 						if(oid[i]!=null){
-							String orderNo = Objects.toString(oid[i]);
-							MemberOrder order = memberOrderBean.findByOrderNo(orderNo);
-							if(order!=null&&"1".equals(status[i])){
-								if(order.getState()!=OrderStatus.FINISHED){//重复订单不计费
-									 order.setState(OrderStatus.FINISHED);
-									 if(System.currentTimeMillis()>=order.getServiceTime().getTime()){
-										 Account account = accountBean.findByMemberNo(order.getMemberNumber());
-										 int addCall = order.getSurplusCallDuration()+account.getSurplusCallDuration();
-										 account.setSurplusCallDuration(addCall);
-										 accountBean.updateAccount(account);
-										 order.setUseState(OrderUseStatus.USING);
+							try{
+								String orderNo = Objects.toString(oid[i]);
+								MemberOrder order = memberOrderBean.findByOrderNo(orderNo);
+								if(order!=null&&"1".equals(status[i])){
+									if(order.getState()!=OrderStatus.FINISHED){//重复订单不计费
+										 order.setState(OrderStatus.FINISHED);
+										 if(System.currentTimeMillis()>=order.getServiceTime().getTime()){
+											 Account account = accountBean.findByMemberNo(order.getMemberNumber());
+											 int addCall = order.getSurplusCallDuration()+account.getSurplusCallDuration();
+											 account.setSurplusCallDuration(addCall);
+											 accountBean.updateAccount(account);
+											 order.setUseState(OrderUseStatus.USING);
+										 }
+										 memberOrderBean.updateOrder(order);
+										 System.out.println("orderNo:"+order.getOrderNo()+"|orderState:"+order.getState()+"|orderUseState:"+order.getUseState());
 									 }
-									 memberOrderBean.updateOrder(order);
-									 System.out.println("orderNo:"+order.getOrderNo()+"|orderState:"+order.getState()+"|orderUseState:"+order.getUseState());
-								 }
-							}else{
-								System.out.println("订单不存在");
+								}else{
+									System.out.println("订单不存在");
+								}
+							}catch(Exception e){
+								e.printStackTrace();
 							}
-							PayEasyLog payel = new PayEasyLog();
-							payel.setOid(oid[i]);
-							payel.setPstatus(status[i]);
-							System.out.println("pmode:"+new String(pmode[i].getBytes(), "gbk"));
-							System.out.println("pstring:"+URLDecoder.decode(pmode[i], "gbk"));
-							payel.setPmode(URLDecoder.decode(pmode[i], "utf-8"));
-							payel.setPstring(URLDecoder.decode(pstring[i], "utf-8"));
-							payel.setAmount(amount[i]);
-							payel.setMoneytype(mtype[i]);
-							payel.setMac(mac);
-							payel.setMd5money(md5money);
-							payel.setSign(sign);
-//							payEasyLogBean.create(payel);
+							
+							try {
+								PayEasyLog payel = new PayEasyLog();
+								payel.setOid(oid[i]);
+								payel.setPstatus(status[i]);
+								payel.setPmode(URLDecoder.decode(pmode[i], "gbk"));
+								payel.setPstring(URLDecoder.decode(pstring[i], "gbk"));
+								payel.setAmount(amount[i]);
+								payel.setMoneytype(mtype[i]);
+								payel.setMac(mac);
+								payel.setMd5money(md5money);
+								payel.setSign(sign);
+								payEasyLogBean.create(payel);
+							} catch (UnsupportedEncodingException e) {
+								e.printStackTrace();
+							}
 						}
 					}
 					result="send";
 				}
 			}
-		}catch(Exception e){
-			e.printStackTrace();
-		}
 		return result;
 	}
+	
+	
+	
 	
 }

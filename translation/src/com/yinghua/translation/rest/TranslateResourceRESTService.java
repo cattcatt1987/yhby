@@ -29,13 +29,16 @@ import com.yinghua.translation.model.Account;
 import com.yinghua.translation.model.CallRecord;
 import com.yinghua.translation.model.LanuageTariff;
 import com.yinghua.translation.model.Member;
+import com.yinghua.translation.model.MemberOrder;
 import com.yinghua.translation.model.MemberPackage;
 import com.yinghua.translation.model.TimedTask;
 import com.yinghua.translation.model.enumeration.MemberType;
+import com.yinghua.translation.model.enumeration.OrderUseStatus;
 import com.yinghua.translation.service.AccountBean;
 import com.yinghua.translation.service.CallHistoryBean;
 import com.yinghua.translation.service.LanuageTariffBean;
 import com.yinghua.translation.service.MemberBean;
+import com.yinghua.translation.service.MemberOrderBean;
 import com.yinghua.translation.service.MemberPackageBean;
 import com.yinghua.translation.service.TimedTaskBean;
 import com.yinghua.translation.util.ClassLoaderUtil;
@@ -65,6 +68,9 @@ public class TranslateResourceRESTService
 	@EJB
 	private MemberPackageBean memberPackageBean;
 
+	@EJB
+	private MemberOrderBean memberOrderBean;
+	
 	@EJB
 	private MemberBean memberBean;
 	private Properties keyPro = ClassLoaderUtil.getProperties("key.properties");
@@ -97,7 +103,6 @@ public class TranslateResourceRESTService
 //		}
 //		catch (ParseException e)
 //		{
-//			// TODO Auto-generated catch block
 //			e.printStackTrace();
 //		}
 //
@@ -204,22 +209,63 @@ public class TranslateResourceRESTService
 		String workId = Objects.toString(obj.get("workId"), "");
 
         Member member = memberBean.findMember(user_id,"");
-
-        System.out.println("lan:"+language);
-        MemberPackage mp = memberPackageBean.findMemberPackage(member.getMemberNumber(),
-				language);
-		Account account = accountBean.findByMemberNo(member.getMemberNumber());
-		LanuageTariff lan = lanuageTariffBean.findByLanguage(language);
-		Date translate_start = new Date(obj.getLongValue("translate_start"));
-		Date translate_end = new Date(obj.getLongValue("translate_end"));;
-
-		Long callDuration = (translate_end.getTime()
-				- translate_start.getTime()) / (1000);
-		//此处填写逻辑，如果用户存在套餐，就扣套餐，不存在就扣标准费用
+        Account account = null;
+        List<MemberOrder> moList = null;
+        System.out.println("翻译结算lan:"+language);
+        if(member!=null){
+        	
+//	        MemberPackage mp = memberPackageBean.findMemberPackage(member.getMemberNumber(),
+//					language);
+        	moList = memberOrderBean.findUsingOrderByUno(member.getMemberNumber());
+			account = accountBean.findByMemberNo(member.getMemberNumber());
+			//此处填写逻辑，如果用户存在套餐，就扣套餐，不存在就扣标准费用
+        }
+        LanuageTariff lan = lanuageTariffBean.findByLanguage(language);
+        Date translate_start = new Date(obj.getLongValue("translate_start"));
+        Date translate_end = new Date(obj.getLongValue("translate_end"));;
+        
+        Long callDuration = (translate_end.getTime()
+        		- translate_start.getTime()) / (1000);
 
 		if(account!=null){
         	account.setSurplusCallDuration(account.getSurplusCallDuration()-(int)(callDuration*lan.getRate()));
             accountBean.updateAccount(account);
+            if(moList!=null){
+            	int subfee = 0;
+            	for (int i = 0; i < moList.size(); i++) {
+					if(i==0){
+						subfee = moList.get(i).getSurplusCallDuration() - (int)(callDuration*lan.getRate());
+					}
+					if(subfee>=0){
+						moList.get(i).setSurplusCallDuration(subfee);
+        				if(subfee==0){
+        					moList.get(i).setUseState(OrderUseStatus.FINISHED);
+        				}
+        				memberOrderBean.updateOrder(moList.get(i));
+        				break;
+					}else{
+						if(i==0){
+							moList.get(i).setSurplusCallDuration(0);
+							moList.get(i).setUseState(OrderUseStatus.FINISHED);
+						}else{
+							int overfee = moList.get(i).getSurplusCallDuration() + subfee ;
+							if(overfee<0){
+								subfee = overfee;
+								moList.get(i).setSurplusCallDuration(0);
+								moList.get(i).setUseState(OrderUseStatus.FINISHED);
+							}else{
+								moList.get(i).setSurplusCallDuration(overfee);
+								if(overfee==0){
+									moList.get(i).setUseState(OrderUseStatus.FINISHED);
+								}
+								memberOrderBean.updateOrder(moList.get(i));
+								break;
+							}
+						}
+						memberOrderBean.updateOrder(moList.get(i));
+					}
+				}
+            }
 		}
 
 
@@ -227,7 +273,7 @@ public class TranslateResourceRESTService
 		CallRecord callRecord = new CallRecord();
 		callRecord.setCallee(callee);
 		callRecord.setWorkId(workId);
-		callRecord.setUserNumber(member.getMemberNumber());
+		if(member!=null)callRecord.setUserNumber(member.getMemberNumber());
 		callRecord.setCaller(caller);
 		callRecord.setCallId(call_id);
 		callRecord.setType("1");
