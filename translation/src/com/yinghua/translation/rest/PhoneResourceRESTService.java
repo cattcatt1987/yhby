@@ -19,7 +19,6 @@ package com.yinghua.translation.rest;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -27,7 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Properties;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
@@ -38,13 +36,9 @@ import javax.ws.rs.Encoded;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-
-import org.apache.http.client.utils.URLEncodedUtils;
 
 import com.alibaba.fastjson.JSONObject;
 import com.pingplusplus.model.Charge;
@@ -53,17 +47,18 @@ import com.pingplusplus.model.Webhooks;
 import com.yinghua.translation.Constant;
 import com.yinghua.translation.model.Account;
 import com.yinghua.translation.model.CallRecord;
+import com.yinghua.translation.model.CommonData;
 import com.yinghua.translation.model.Member;
 import com.yinghua.translation.model.MemberOrder;
 import com.yinghua.translation.model.Order;
 import com.yinghua.translation.model.PackageProduct;
 import com.yinghua.translation.model.PayEasyLog;
 import com.yinghua.translation.model.Product;
-import com.yinghua.translation.model.TranslationRecord;
 import com.yinghua.translation.model.enumeration.OrderStatus;
 import com.yinghua.translation.model.enumeration.OrderUseStatus;
 import com.yinghua.translation.service.AccountBean;
 import com.yinghua.translation.service.CallHistoryBean;
+import com.yinghua.translation.service.CommonDataBean;
 import com.yinghua.translation.service.MemberBean;
 import com.yinghua.translation.service.MemberOrderBean;
 import com.yinghua.translation.service.OrderBean;
@@ -71,7 +66,6 @@ import com.yinghua.translation.service.PackageProductBean;
 import com.yinghua.translation.service.PayEasyLogBean;
 import com.yinghua.translation.service.PaymentBean;
 import com.yinghua.translation.service.ProductBean;
-import com.yinghua.translation.util.ClassLoaderUtil;
 import com.yinghua.translation.util.OrderNoUtil;
 
 @Path("/phoneService")
@@ -104,8 +98,15 @@ public class PhoneResourceRESTService
 	
 	@EJB
 	private PayEasyLogBean payEasyLogBean;
+	
 	@EJB
 	private MemberOrderBean memberOrderBean;
+	
+	@EJB
+	private MemberBean memberBean;
+	
+	@EJB
+	private CommonDataBean commonDataBean;
 	
 	/**
 	 * 查询服务记录
@@ -607,6 +608,46 @@ public class PhoneResourceRESTService
 	}
 	
 	/**
+	 * 获取常见问题及消息
+	 * 
+	 * @param params
+	 * @return
+	 */
+	@POST
+	@Path("/getCommonData")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> getCommonData(String params)
+	{
+		JSONObject obj = JSONObject.parseObject(params);
+		String commonType = Objects.toString(obj.get("commonType"), "");
+		
+		Map<String, Object> req = new HashMap<>();
+		//Member member = repository.findById(Long.parseLong(uid));
+		List<CommonData> list = commonDataBean.findByCommonType(commonType);
+		try
+		{
+			if(list!=null){
+				req.put("count",list.size());
+				req.put("commonDatas", list);
+			}
+			req.put("result", "success");
+			req.put("error_code", "000000");
+			req.put("error_msg", "");
+
+		}
+		catch (Exception e)
+		{
+			log.info(e.getMessage());
+			req.put("result", "fail");
+			req.put("error_code", "7001");
+			req.put("error_msg", "系统内部错误");
+		}
+
+		return req;
+	}
+	
+	/**
 	 * 发送第三方通话号码
 	 * 
 	 * @param params
@@ -628,9 +669,23 @@ public class PhoneResourceRESTService
 			Constant.call3Map.put(caller, callee);
 			System.out.println("caller:"+caller+",callee:"+Constant.call3Map.get(caller));
 			System.out.println("三方通话开始！收到第三方号码参数");
-			req.put("result", "success");
-			req.put("error_code", "000000");
-			req.put("error_msg", "");
+			Member member = memberBean.findMember(caller, "");
+			if(member!=null){
+				Account account = accountBean.findByMemberNo(member.getMemberNumber());
+				if(account!=null&&account.getSurplusCallDuration()>0){
+					req.put("result", "success");
+					req.put("error_code", "000000");
+					req.put("error_msg", "");
+				}else{
+					req.put("result", "fail");
+					req.put("error_code", "1011");
+					req.put("error_msg", "剩余分钟数不足");
+				}
+			}else{
+				req.put("result", "fail");
+				req.put("error_code", "1006");
+				req.put("error_msg", "用户不存在");
+			}
 
 		}
 		catch (Exception e)

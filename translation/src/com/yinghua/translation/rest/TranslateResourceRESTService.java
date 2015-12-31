@@ -199,6 +199,7 @@ public class TranslateResourceRESTService
 	@Produces(MediaType.APPLICATION_JSON)
 	public Map<String, Object> notifyTranslateEndEvent(String params)
 	{
+		System.out.println("params:"+params);
 		Map<String, Object> req = new HashMap<>();
 		JSONObject obj = JSONObject.parseObject(params);
 		String call_id = Objects.toString(obj.get("call_id"), "");
