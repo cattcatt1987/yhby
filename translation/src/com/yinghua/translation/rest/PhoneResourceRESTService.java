@@ -661,39 +661,72 @@ public class PhoneResourceRESTService
 	{
 		JSONObject obj = JSONObject.parseObject(params);
 		String caller = Objects.toString(obj.get("caller"), "null");
-		String callee = Objects.toString(obj.getString("callee"),"null");
+		String callee = Objects.toString(obj.getString("callee"),"");
 		Map<String, Object> req = new HashMap<>();
 		// 此处更新三方通话号码
+		boolean isOk = false;
+		String errorCode = "1011";
+		String errorMsg = "未订购套餐";
 		try
 		{
 			Constant.call3Map.put(caller, callee);
 			System.out.println("caller:"+caller+",callee:"+Constant.call3Map.get(caller));
-			System.out.println("三方通话开始！收到第三方号码参数");
-			Member member = memberBean.findMember(caller, "");
-			if(member!=null){
-				Account account = accountBean.findByMemberNo(member.getMemberNumber());
-				if(account!=null&&account.getSurplusCallDuration()>0){
+			System.out.println("收到第三方号码参数");
+			if(callee!=null&&callee.length()>0){
+				if(callee.startsWith("000000000")){
+					//套餐内
+					Member member = memberBean.findMember(caller, "");
+					if(member!=null){
+						System.out.println("用户号码："+member.getMemberNumber());
+						List<MemberOrder> orders = memberOrderBean.findUsingOrderByUno(member.getMemberNumber());
+						if(orders!=null&&orders.size()>0){
+							for (MemberOrder memberOrder : orders) {
+								if("1003".equals(memberOrder.getPackageNo())||Constant.packageNoMap.get(callee).equals(memberOrder.getPackageNo())){
+									isOk = true;
+									break;
+								}
+							}
+						}
+//				Account account = accountBean.findByMemberNo(member.getMemberNumber());
+//				if(account!=null&&account.getSurplusCallDuration()>0){
+//					req.put("result", "success");
+//					req.put("error_code", "000000");
+//					req.put("error_msg", "");
+//				}else{
+//					req.put("result", "fail");
+//					req.put("error_code", "1011");
+//					req.put("error_msg", "剩余分钟数不足");
+//				}
+					}else{
+						errorCode="1006";
+						errorMsg="用户不存在";
+					}
+					if(isOk){
+						req.put("result", "success");
+						req.put("error_code", "000000");
+						req.put("error_msg", "");
+					}else{
+						req.put("result", "fail");
+						req.put("error_code", errorCode);
+						req.put("error_msg", errorMsg);
+					}
+				}else{//网络电话
 					req.put("result", "success");
 					req.put("error_code", "000000");
 					req.put("error_msg", "");
-				}else{
-					req.put("result", "fail");
-					req.put("error_code", "1011");
-					req.put("error_msg", "剩余分钟数不足");
 				}
 			}else{
 				req.put("result", "fail");
-				req.put("error_code", "1006");
-				req.put("error_msg", "用户不存在");
+				req.put("error_code", "1011");
+				req.put("error_msg", "拨打号码为空");
 			}
-
 		}
 		catch (Exception e)
 		{
 			log.info(e.getMessage());
 			req.put("result", "fail");
 			req.put("error_code", "7001");
-			req.put("error_msg", "");
+			req.put("error_msg", "系统内部错误");
 		}
 
 		return req;
