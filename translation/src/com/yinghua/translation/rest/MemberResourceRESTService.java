@@ -49,22 +49,27 @@ import com.alibaba.fastjson.JSONObject;
 import com.yinghua.translation.Constant;
 import com.yinghua.translation.model.Account;
 import com.yinghua.translation.model.Member;
+import com.yinghua.translation.model.MemberOrder;
 import com.yinghua.translation.model.MemberPackage;
 import com.yinghua.translation.model.ThirdMember;
 import com.yinghua.translation.model.enumeration.Gender;
 import com.yinghua.translation.model.enumeration.LoginType;
 import com.yinghua.translation.model.enumeration.MemberStatus;
 import com.yinghua.translation.model.enumeration.MemberType;
+import com.yinghua.translation.model.enumeration.OrderStatus;
+import com.yinghua.translation.model.enumeration.OrderUseStatus;
 import com.yinghua.translation.rongcloud.io.rong.ApiHttpClient;
 import com.yinghua.translation.rongcloud.io.rong.models.FormatType;
 import com.yinghua.translation.rongcloud.io.rong.models.SdkHttpResult;
 import com.yinghua.translation.service.AccountBean;
 import com.yinghua.translation.service.MemberBean;
+import com.yinghua.translation.service.MemberOrderBean;
 import com.yinghua.translation.service.MemberPackageBean;
 import com.yinghua.translation.service.ThirdMemberBean;
 import com.yinghua.translation.util.ClassLoaderUtil;
 import com.yinghua.translation.util.HttpRequester;
 import com.yinghua.translation.util.HttpRespons;
+import com.yinghua.translation.util.OrderNoUtil;
 import com.yinghua.translation.util.PropertiesUtil;
 import com.yinghua.translation.util.RandomNum;
 import com.yinghua.translation.util.UUIDUtil;
@@ -89,6 +94,9 @@ public class MemberResourceRESTService
 	@EJB
 	private MemberPackageBean memberPackageBean;
 
+	@EJB
+	private MemberOrderBean memberOrderBean;
+	
 	@Inject
 	private HttpRequester httpRequester;
 
@@ -351,6 +359,23 @@ public class MemberResourceRESTService
 					account.setSurplusCallDuration(0);
 					account.setStatus(MemberStatus.NORMAL);
 					accountBean.register(account);
+					
+					MemberOrder mo = new MemberOrder();
+					mo.setMemberNumber(member.getMemberNumber());
+					mo.setOrderNo(OrderNoUtil.getOrderNo("OR"));
+					mo.setOrderPrice("0");
+					mo.setOrderTime(new Date());
+					mo.setPackageDesc("问路、打车、租车、餐饮、退税、购物、酒店、购票、其他");
+					mo.setPackageName("生活服务套餐");
+					mo.setPackageNo("1002");
+					mo.setPayWay("0");
+					mo.setServiceTime(new Date());
+					mo.setState(OrderStatus.FINISHED);
+					mo.setUseState(OrderUseStatus.USING);
+					mo.setUseDate(30);
+					mo.setSurplusCallDuration(8000*30);
+					mo.setPackageType("1");
+					memberOrderBean.createOrder(mo);
 	
 				}
 				else

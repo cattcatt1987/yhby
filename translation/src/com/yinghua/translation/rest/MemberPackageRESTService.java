@@ -147,6 +147,39 @@ public class MemberPackageRESTService {
 	}
 
 	/**
+	 * 查询套餐列表
+	 * 
+	 * @param params
+	 * @return
+	 */
+	@POST
+	@Path("/getVersion")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> getVersion(String params) {
+		Map<String, Object> req = new HashMap<>();
+		JSONObject obj = JSONObject.parseObject(params);
+		String version = Objects.toString(obj.getString("version"), "0");
+		
+
+		if (!version.equals(keyPro.getProperty("version"))) {
+			req.put("version", keyPro.getProperty("version"));
+			req.put("desc", "请更新最新版本");
+			req.put("downloadUrl", keyPro.getProperty("downloadUrl"));
+			req.put("result", "fail");
+			req.put("error_code", "8000");
+			req.put("error_msg", "需要更新版本");
+		} else {
+			req.put("version", version);
+			req.put("desc", "已是最新版本");
+			req.put("result", "success");
+			req.put("error_code", "000000");
+			req.put("error_msg", "");
+		}
+		return req;
+	}
+	
+	/**
 	 * 查询用户订购列表
 	 * 
 	 * @param params

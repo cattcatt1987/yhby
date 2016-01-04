@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
@@ -66,6 +67,7 @@ import com.yinghua.translation.service.PackageProductBean;
 import com.yinghua.translation.service.PayEasyLogBean;
 import com.yinghua.translation.service.PaymentBean;
 import com.yinghua.translation.service.ProductBean;
+import com.yinghua.translation.util.ClassLoaderUtil;
 import com.yinghua.translation.util.OrderNoUtil;
 
 @Path("/phoneService")
@@ -107,6 +109,7 @@ public class PhoneResourceRESTService
 	
 	@EJB
 	private CommonDataBean commonDataBean;
+	
 	
 	/**
 	 * 查询服务记录

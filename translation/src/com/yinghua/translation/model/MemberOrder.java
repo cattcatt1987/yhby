@@ -8,6 +8,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 import com.yinghua.translation.model.enumeration.OrderStatus;
 import com.yinghua.translation.model.enumeration.OrderUseStatus;
@@ -41,6 +43,7 @@ public class MemberOrder implements java.io.Serializable
 	@Column(name = "package_desc")
 	private String packageDesc; // package_desc 套餐描述
 	@Column(name = "order_time")
+	@Temporal(TemporalType.DATE)
 	private Date orderTime; // order_time 下单时间
 	@Column(name = "surplus_call_duration")
 	private Integer surplusCallDuration; // surplus_call_duration 剩余通话时长
@@ -49,6 +52,7 @@ public class MemberOrder implements java.io.Serializable
 	@Column(name = "use_state")
 	private OrderUseStatus useState; // use_state 使用状态
 	@Column(name = "service_time")
+	@Temporal(TemporalType.TIMESTAMP)
 	private Date serviceTime; // service_time 服务有效时间
 	@Column(name = "use_date")
 	private int useDate; // use_date 使用周期
