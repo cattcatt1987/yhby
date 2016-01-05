@@ -173,7 +173,7 @@ public class PhoneResourceRESTService
 		String uno = obj.getString("uno");
 		String prod_no = Objects.toString(obj.getString("packageNo"), "0");
 		Float orderPrice = obj.getFloat("price");
-		int price = (int)(orderPrice*100);
+		int price = (int)(orderPrice*100); 
 		String pay_way = obj.getString("pay_way");
 		String service_time = obj.getString("service_time");
 		int use_date = obj.getIntValue("use_date");
@@ -941,7 +941,47 @@ public class PhoneResourceRESTService
 		return result;
 	}
 	
-	
+	/**
+	 * 接收ping++异步支付结果通知
+	 * 
+	 * @param params
+	 * @return
+	 */
+	@POST
+	@Path("/weixinNotify")
+	@Consumes(MediaType.APPLICATION_XML)
+	@Produces(MediaType.APPLICATION_XML)
+	public Map<String, Object> weixinNotify(String params)
+	{
+		Event event = Webhooks.eventParse(params);
+		Map<String, Object> req = new HashMap<>();
+		 if ("charge.succeeded".equals(event.getType())) {
+			@SuppressWarnings("unchecked")
+			Map<String,Object> object = (Map<String, Object>) event.getData().get("object");
+			 if(object!=null&&object.size()>0){
+				 String orderNo = Objects.toString(object.get("order_no"),"0");
+				 MemberOrder order = memberOrderBean.findByOrderNo(orderNo);
+				 if(order!=null){
+					 if(order.getState()!=OrderStatus.FINISHED){
+						 order.setState(OrderStatus.FINISHED);
+						 if(System.currentTimeMillis()>=order.getServiceTime().getTime()){
+							 Account account = accountBean.findByMemberNo(order.getMemberNumber());
+							 int addCall = order.getSurplusCallDuration()+account.getSurplusCallDuration();
+							 account.setSurplusCallDuration(addCall);
+							 accountBean.updateAccount(account);
+							 order.setUseState(OrderUseStatus.USING);
+						 }
+						 memberOrderBean.updateOrder(order);
+						 System.out.println("orderNo:"+order.getOrderNo()+"|orderState:"+order.getState()+"|orderUseState:"+order.getUseState());
+					 }
+				 }else{
+					 //记录日志
+				 }
+			 }
+	        }
+		 req.put("result", "ok");
+		return req;
+	}
 	
 	
 }
