@@ -40,6 +40,13 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.DocumentHelper;
+import org.dom4j.Element;
 
 import com.alibaba.fastjson.JSONObject;
 import com.pingplusplus.model.Charge;
@@ -54,6 +61,7 @@ import com.yinghua.translation.model.MemberOrder;
 import com.yinghua.translation.model.Order;
 import com.yinghua.translation.model.PackageProduct;
 import com.yinghua.translation.model.PayEasyLog;
+import com.yinghua.translation.model.PayWeixinLog;
 import com.yinghua.translation.model.Product;
 import com.yinghua.translation.model.enumeration.OrderStatus;
 import com.yinghua.translation.model.enumeration.OrderUseStatus;
@@ -65,6 +73,7 @@ import com.yinghua.translation.service.MemberOrderBean;
 import com.yinghua.translation.service.OrderBean;
 import com.yinghua.translation.service.PackageProductBean;
 import com.yinghua.translation.service.PayEasyLogBean;
+import com.yinghua.translation.service.PayWeixinLogBean;
 import com.yinghua.translation.service.PaymentBean;
 import com.yinghua.translation.service.ProductBean;
 import com.yinghua.translation.util.ClassLoaderUtil;
@@ -100,6 +109,9 @@ public class PhoneResourceRESTService
 	
 	@EJB
 	private PayEasyLogBean payEasyLogBean;
+	
+	@EJB
+	private PayWeixinLogBean payWeixinLogBean;
 	
 	@EJB
 	private MemberOrderBean memberOrderBean;
@@ -951,18 +963,21 @@ public class PhoneResourceRESTService
 	@Path("/weixinNotify")
 	@Consumes(MediaType.APPLICATION_XML)
 	@Produces(MediaType.APPLICATION_XML)
-	public Map<String, Object> weixinNotify(String params)
+	public String weixinNotify(String params)
 	{
-		Event event = Webhooks.eventParse(params);
-		Map<String, Object> req = new HashMap<>();
-		 if ("charge.succeeded".equals(event.getType())) {
-			@SuppressWarnings("unchecked")
-			Map<String,Object> object = (Map<String, Object>) event.getData().get("object");
-			 if(object!=null&&object.size()>0){
-				 String orderNo = Objects.toString(object.get("order_no"),"0");
-				 MemberOrder order = memberOrderBean.findByOrderNo(orderNo);
-				 if(order!=null){
-					 if(order.getState()!=OrderStatus.FINISHED){
+		String req = null;
+		Document reqDoc = DocumentHelper.createDocument();
+		Element reqRoot = reqDoc.addElement("xml");
+		Element reqCode = reqRoot.addElement("return_code");
+		try {
+			Document doc = DocumentHelper.parseText(params);
+			Element root = doc.getRootElement();
+			Element returnCode = root.element("return_code");
+			if( "SUCCESS".equals(returnCode.getText())){
+				String orderNo = root.elementText("out_trade_no");
+				MemberOrder order = memberOrderBean.findByOrderNo(orderNo);
+				if(order!=null&&"SUCCESS".equals(root.elementText("result_code"))){
+					if(order.getState()!=OrderStatus.FINISHED){//重复订单不计费
 						 order.setState(OrderStatus.FINISHED);
 						 if(System.currentTimeMillis()>=order.getServiceTime().getTime()){
 							 Account account = accountBean.findByMemberNo(order.getMemberNumber());
@@ -974,12 +989,54 @@ public class PhoneResourceRESTService
 						 memberOrderBean.updateOrder(order);
 						 System.out.println("orderNo:"+order.getOrderNo()+"|orderState:"+order.getState()+"|orderUseState:"+order.getUseState());
 					 }
-				 }else{
-					 //记录日志
-				 }
-			 }
-	        }
-		 req.put("result", "ok");
+				}else{
+					System.out.println("订单不存在");
+				}
+				
+				PayWeixinLog pwl = new PayWeixinLog();
+				pwl.setAppid(root.elementText("appid"));
+				pwl.setMchId(root.elementText("mch_id"));
+				if(root.element("device_info")!=null)
+				pwl.setDeviceInfo(root.elementText("device_info"));
+				pwl.setNonceStr(root.elementText("nonce_str"));
+				pwl.setSign(root.elementText("sign"));
+				pwl.setResultCode(root.elementText("result_code"));
+				if(root.element("err_code")!=null)
+				pwl.setErrCode(root.elementText("err_code"));
+				if(root.element("err_code_des")!=null)
+				pwl.setErrCodeDes(root.elementText("err_code_des"));
+				pwl.setOpenid(root.elementText("openid"));
+				if(root.element("is_subscribe")!=null)
+				pwl.setIsSubscribe(root.elementText("is_subscribe"));
+				pwl.setTradeType(root.elementText("trade_type"));
+				pwl.setBankType(root.elementText("bank_type"));
+				pwl.setTotalFee(Integer.parseInt(root.elementText("total_fee")));
+				if(root.element("fee_type")!=null)
+				pwl.setFeeType(root.elementText("fee_type"));
+				if(root.element("cash_fee")!=null)
+				pwl.setCashFee(Integer.parseInt(root.elementText("cash_fee")));
+				if(root.element("cash_fee_type")!=null)
+				pwl.setCashFeeType(root.elementText("cash_fee_type"));
+				pwl.setTransationId(root.elementText("transation_id"));
+				pwl.setOutTradeNo(root.elementText("out_trade_no"));
+				if(root.element("attach")!=null)
+				pwl.setAttach(root.elementText("attach"));
+				pwl.setTimeEnd(root.elementText("time_end"));
+				payWeixinLogBean.createPayWeixinLog(pwl);
+				
+				reqCode.setText("SUCCESS");
+			}else{
+				reqCode.setText("FAIL");
+				Element returnMsg = root.element("return_msg");
+				returnMsg.setText(root.elementText("retrun_msg"));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			reqCode.setText("FAIL");
+			Element reqMsg = reqRoot.addElement("return_msg");
+			reqMsg.setText("校验失败");
+		}
+		req = reqDoc.asXML();
 		return req;
 	}
 	

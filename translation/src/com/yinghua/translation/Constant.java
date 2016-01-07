@@ -13,21 +13,24 @@ public class Constant {
 	
 	public static final Map<String,String> packageNoMap = new HashMap<String,String>();
 	static {
-		packageNoMap.put("00000000001", "1002");
-		packageNoMap.put("00000000002", "1002");
-		packageNoMap.put("00000000003", "1002");
-		packageNoMap.put("00000000004", "1002");
-		packageNoMap.put("00000000005", "1002");
-		packageNoMap.put("00000000006", "1002");
-		packageNoMap.put("00000000007", "1002");
-		packageNoMap.put("00000000008", "1001");
-		packageNoMap.put("00000000009", "1001");
-		packageNoMap.put("00000000010", "1001");
-		packageNoMap.put("00000000011", "1001");
-		packageNoMap.put("00000000012", "1001");
-		packageNoMap.put("00000000013", "1001");
-		packageNoMap.put("00000000014", "1001");
-		packageNoMap.put("00000000015", "1001");
+		//应急1到7
+		packageNoMap.put("00000000001", "1001");
+		packageNoMap.put("00000000002", "1001");
+		packageNoMap.put("00000000003", "1001");
+		packageNoMap.put("00000000004", "1001");
+		packageNoMap.put("00000000005", "1001");
+		packageNoMap.put("00000000006", "1001");
+		packageNoMap.put("00000000007", "1001");
+		
+		//生活11到17
+		packageNoMap.put("00000000011", "1002");
+		packageNoMap.put("00000000012", "1002");
+		packageNoMap.put("00000000013", "1002");
+		packageNoMap.put("00000000014", "1002");
+		packageNoMap.put("00000000015", "1002");
+		packageNoMap.put("00000000016", "1002");
+		packageNoMap.put("00000000017", "1002");
+//		packageNoMap.put("00000000015", "1002");
 	}
 	
 	
