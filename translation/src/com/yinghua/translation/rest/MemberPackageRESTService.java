@@ -44,19 +44,23 @@ import com.paypal.api.payments.Payment;
 import com.paypal.base.rest.OAuthTokenCredential;
 import com.paypal.base.rest.PayPalRESTException;
 import com.yinghua.translation.model.Account;
+import com.yinghua.translation.model.BaseProduct;
 import com.yinghua.translation.model.LanuageTariff;
 import com.yinghua.translation.model.MemberOrder;
 import com.yinghua.translation.model.MemberPackage;
 import com.yinghua.translation.model.Order;
 import com.yinghua.translation.model.PackageProduct;
+import com.yinghua.translation.model.PackageProductContent;
 import com.yinghua.translation.model.Product;
 import com.yinghua.translation.model.enumeration.OrderStatus;
 import com.yinghua.translation.service.AccountBean;
+import com.yinghua.translation.service.BaseProductBean;
 import com.yinghua.translation.service.LanuageTariffBean;
 import com.yinghua.translation.service.MemberOrderBean;
 import com.yinghua.translation.service.MemberPackageBean;
 import com.yinghua.translation.service.OrderBean;
 import com.yinghua.translation.service.PackageProductBean;
+import com.yinghua.translation.service.PackageProductContentBean;
 import com.yinghua.translation.service.PaymentBean;
 import com.yinghua.translation.service.ProductBean;
 import com.yinghua.translation.util.ClassLoaderUtil;
@@ -78,7 +82,13 @@ public class MemberPackageRESTService {
 	private ProductBean productBean;
 
 	@EJB
+	private BaseProductBean baseProductBean;
+	
+	@EJB
 	private PackageProductBean packageProductBean;
+	
+	@EJB
+	private PackageProductContentBean packageProductContentBean;
 	
 	@EJB
 	private AccountBean accountBean;
@@ -239,6 +249,65 @@ public class MemberPackageRESTService {
 		return req;
 	}
 
+	/**
+	 * 查询产品列表
+	 * 
+	 * @param params
+	 * @return
+	 */
+	@POST
+	@Path("/baseProducts")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> baseProducts(String params) {
+		Map<String, Object> req = new HashMap<>();
+		JSONObject obj = JSONObject.parseObject(params);
+		String uid = Objects.toString(obj.getString("uid"), "0");
+
+		List<BaseProduct> pack = baseProductBean.findAll();
+		if (pack != null) {
+			req.put("count", Objects.toString(pack.size(), "0"));
+			req.put("baseProducts", pack);
+			req.put("result", "success");
+			req.put("error_code", "000000");
+			req.put("error_msg", "");
+		} else {
+			req.put("result", "fail");
+			req.put("error_code", "20002");
+			req.put("error_msg", "查无信息");
+		}
+		return req;
+	}
+	
+	/**
+	 * 查询套餐详情列表
+	 * 
+	 * @param params
+	 * @return
+	 */
+	@POST
+	@Path("/packageDetail")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> packageDetail(String params) {
+		Map<String, Object> req = new HashMap<>();
+		JSONObject obj = JSONObject.parseObject(params);
+		String packageNo = Objects.toString(obj.getString("packageNo"), "0");
+
+		List<PackageProductContent> pack = packageProductContentBean.findByPackageNo(packageNo);
+		if (pack != null) {
+			req.put("count", Objects.toString(pack.size(), "0"));
+			req.put("baseProducts", pack);
+			req.put("result", "success");
+			req.put("error_code", "000000");
+			req.put("error_msg", "");
+		} else {
+			req.put("result", "fail");
+			req.put("error_code", "20002");
+			req.put("error_msg", "查无信息");
+		}
+		return req;
+	}
 	
 	/**
 	 * 查询套餐列表
@@ -253,6 +322,38 @@ public class MemberPackageRESTService {
 	public Map<String, Object> packages(String params) {
 		Map<String, Object> req = new HashMap<>();
 		JSONObject obj = JSONObject.parseObject(params);
+		String type = Objects.toString(obj.getString("package_type"), "0");
+
+//		List<PackageProduct> pack = packageProductBean.findByPackageType(type);
+		List<PackageProduct> pack = packageProductBean.findAll();
+		if (pack != null&&pack.size()>0) {
+			req.put("count", Objects.toString(pack.size(), "0"));
+			req.put("packages", pack);
+			req.put("result", "success");
+			req.put("error_code", "000000");
+			req.put("error_msg", "");
+		} else {
+			req.put("result", "fail");
+			req.put("error_code", "20002");
+			req.put("error_msg", "查无信息");
+		}
+		return req;
+	}
+	
+	/**
+	 * 查询套餐列表
+	 * 
+	 * @param params
+	 * @return
+	 */
+	@POST
+	@Path("/packageProducts")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> packageProducts(String params) {
+		Map<String, Object> req = new HashMap<>();
+		JSONObject obj = JSONObject.parseObject(params);
+		
 		String type = Objects.toString(obj.getString("package_type"), "0");
 
 //		List<PackageProduct> pack = packageProductBean.findByPackageType(type);

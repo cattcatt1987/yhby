@@ -39,7 +39,7 @@ public class PackageProduct implements Serializable
 	@Column(name = "status")
 	private PackageStatus status; // status 状态
 	@Column(name = "type")
-	private String type; // type 套餐类型
+	private String type; // type 套餐类型 1按次 2按天
 	@Column(name = "is_app_buy")
 	private String isAppBuy; // is_app_buy 是否可在App购买
 	@Column(name = "create_person")
@@ -49,7 +49,7 @@ public class PackageProduct implements Serializable
 	@Column(name = "modified_person")
 	private String modifiedPerson; // modified_person 修改人
 	@Column(name = "modified_time")
-	private Date modifiedTime; // modified_time 修改时间
+	private Date modifiedTime; // modified_time 截止时间
 	@Column(name = "remark")
 	private String remark;// remark 备注
 	

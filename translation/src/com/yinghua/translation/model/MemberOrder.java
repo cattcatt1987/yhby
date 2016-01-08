@@ -37,7 +37,7 @@ public class MemberOrder implements java.io.Serializable
 	@Column(name = "package_no")
 	private String packageNo; // package_no 套餐编号
 	@Column(name = "package_type")
-	private String packageType; // package_type 套餐类型
+	private String packageType; // package_type 套餐类型 1.按天 2.按次
 	@Column(name = "package_name")
 	private String packageName; // package_name 套餐名称
 	@Column(name = "package_desc")
