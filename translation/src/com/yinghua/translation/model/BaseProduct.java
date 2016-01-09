@@ -32,6 +32,8 @@ public class BaseProduct implements Serializable{
 	private Date createTime;//创建时间
 	@Column(name="service_type")
 	private String serviceType;//业务类型 1应急 2生活 3其他
+	@Column(name="service_no")
+	private String serviceNo;//服务号码
 	
 	public Long getId() {
 		return id;
@@ -80,6 +82,12 @@ public class BaseProduct implements Serializable{
 	}
 	public void setServiceType(String serviceType) {
 		this.serviceType = serviceType;
+	}
+	public String getServiceNo() {
+		return serviceNo;
+	}
+	public void setServiceNo(String serviceNo) {
+		this.serviceNo = serviceNo;
 	}
 
 }

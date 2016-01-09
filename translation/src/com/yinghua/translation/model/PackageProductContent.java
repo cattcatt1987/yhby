@@ -26,7 +26,7 @@ public class PackageProductContent implements Serializable{
 	private String type;//类型，1按次,次数有限2按天，次数无限
 	@Column(name="times")
 	private int times;//次数
-	@Column(name="createTime")
+	@Column(name="create_time")
 	private Date createTime;//创建时间
 	
 	public Long getId() {

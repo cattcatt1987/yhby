@@ -85,7 +85,7 @@ public class PackageProductContentBean extends AbstractFacade<PackageProductCont
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 		CriteriaQuery<PackageProductContent> criteria = cb.createQuery(PackageProductContent.class);
 		Root<PackageProductContent> packageProduct = criteria.from(PackageProductContent.class);
-		Join<PackageProductContent,BaseProduct> bpJoin = packageProduct.join("packageNo", JoinType.LEFT);
+//		Join<PackageProductContent,BaseProduct> bpJoin = packageProduct.join("packageNo", JoinType.LEFT);
 		criteria.select(packageProduct).where(cb.equal(packageProduct.get("packageNo"), packageNo));
 		return em.createQuery(criteria).getResultList();
 	}

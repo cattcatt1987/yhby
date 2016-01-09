@@ -37,7 +37,7 @@ public class MemberOrder implements java.io.Serializable
 	@Column(name = "package_no")
 	private String packageNo; // package_no 套餐编号
 	@Column(name = "package_type")
-	private String packageType; // package_type 套餐类型 1.按天 2.按次
+	private String packageType; // package_type 套餐类型 1.按天 2.按次 3.自由组合
 	@Column(name = "package_name")
 	private String packageName; // package_name 套餐名称
 	@Column(name = "package_desc")
@@ -55,12 +55,15 @@ public class MemberOrder implements java.io.Serializable
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date serviceTime; // service_time 服务有效时间
 	@Column(name = "use_date")
-	private int useDate; // use_date 使用周期
+	private int useDate; // use_date 使用周期 为按天套餐使用
 	@Column(name = "order_price")
 	private String orderPrice; //order_price订单总额
 	@Column(name = "pay_way")
 	private String payWay; // pay_way 支付方式
-	
+	@Column(name = "remark")
+	private String remark;// remark 为自由组合套餐预留，存放单项及次数关系
+	@Column(name = "service_end_time")
+	private Date serviceEndTime;//服务有效截止日期，为按次套餐使用
 	public MemberOrder()
 	{}
 
@@ -189,6 +192,22 @@ public class MemberOrder implements java.io.Serializable
 
 	public void setUseState(OrderUseStatus useState) {
 		this.useState = useState;
+	}
+
+	public String getRemark() {
+		return remark;
+	}
+
+	public void setRemark(String remark) {
+		this.remark = remark;
+	}
+
+	public Date getServiceEndTime() {
+		return serviceEndTime;
+	}
+
+	public void setServiceEndTime(Date serviceEndTime) {
+		this.serviceEndTime = serviceEndTime;
 	}
 
 

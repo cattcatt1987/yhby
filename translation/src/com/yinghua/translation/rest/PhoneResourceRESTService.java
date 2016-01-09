@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Properties;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
@@ -40,11 +39,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.dom4j.Document;
-import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
@@ -58,6 +54,7 @@ import com.yinghua.translation.model.CallRecord;
 import com.yinghua.translation.model.CommonData;
 import com.yinghua.translation.model.Member;
 import com.yinghua.translation.model.MemberOrder;
+import com.yinghua.translation.model.MemberOrderUse;
 import com.yinghua.translation.model.Order;
 import com.yinghua.translation.model.PackageProduct;
 import com.yinghua.translation.model.PayEasyLog;
@@ -66,17 +63,19 @@ import com.yinghua.translation.model.Product;
 import com.yinghua.translation.model.enumeration.OrderStatus;
 import com.yinghua.translation.model.enumeration.OrderUseStatus;
 import com.yinghua.translation.service.AccountBean;
+import com.yinghua.translation.service.BaseProductBean;
 import com.yinghua.translation.service.CallHistoryBean;
 import com.yinghua.translation.service.CommonDataBean;
 import com.yinghua.translation.service.MemberBean;
 import com.yinghua.translation.service.MemberOrderBean;
+import com.yinghua.translation.service.MemberOrderUseBean;
 import com.yinghua.translation.service.OrderBean;
 import com.yinghua.translation.service.PackageProductBean;
+import com.yinghua.translation.service.PackageProductContentBean;
 import com.yinghua.translation.service.PayEasyLogBean;
 import com.yinghua.translation.service.PayWeixinLogBean;
 import com.yinghua.translation.service.PaymentBean;
 import com.yinghua.translation.service.ProductBean;
-import com.yinghua.translation.util.ClassLoaderUtil;
 import com.yinghua.translation.util.OrderNoUtil;
 
 @Path("/phoneService")
@@ -94,9 +93,15 @@ public class PhoneResourceRESTService
 
 	@EJB
 	private ProductBean productBean;
+
+	@EJB
+	private BaseProductBean baseProductBean;
 	
 	@EJB
 	private PackageProductBean packageProductBean;
+	
+	@EJB
+	private PackageProductContentBean packageProductContentBean;
 	
 	@EJB
 	private AccountBean accountBean;
@@ -115,6 +120,9 @@ public class PhoneResourceRESTService
 	
 	@EJB
 	private MemberOrderBean memberOrderBean;
+	
+	@EJB
+	private MemberOrderUseBean memberOrderUseBean;
 	
 	@EJB
 	private MemberBean memberBean;
@@ -189,6 +197,8 @@ public class PhoneResourceRESTService
 		String pay_way = obj.getString("pay_way");
 		String service_time = obj.getString("service_time");
 		int use_date = obj.getIntValue("use_date");
+		String service_end_time = obj.getString("service_end_time");
+		String remark = obj.getString("remark");
 		
 		PackageProduct packageProduct = packageProductBean.findByPackageNo(prod_no);
 		
@@ -213,13 +223,25 @@ public class PhoneResourceRESTService
 				order.setServiceTime(sdf.parse(service_time));
 			} catch (ParseException e1) {
 				e1.printStackTrace();
+				order.setServiceTime(new Date());
 			}
+			
+			try {
+				if(service_end_time!=null){
+					order.setServiceEndTime(sdf.parse(service_end_time));
+				}
+			} catch (ParseException e1) {
+				e1.printStackTrace();
+				order.setServiceTime(new Date(System.currentTimeMillis()+30*24*60*60*1000));
+			}
+			
 			order.setSurplusCallDuration(packageProduct.getSurplusCallDuration()*use_date);
 			order.setUseDate(use_date);
 			order.setUseState(OrderUseStatus.PERPARE);
 			order.setState(OrderStatus.CREATED);
 			order.setOrderPrice(String.valueOf(orderPrice));
 			order.setPayWay(pay_way);
+			order.setRemark(remark);
 			
 			Long id = memberOrderBean.createOrder(order);
 			

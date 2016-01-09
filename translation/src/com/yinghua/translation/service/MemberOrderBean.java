@@ -13,6 +13,7 @@ import javax.persistence.criteria.Root;
 import org.apache.log4j.Logger;
 
 import com.yinghua.translation.model.MemberOrder;
+import com.yinghua.translation.model.enumeration.OrderStatus;
 import com.yinghua.translation.model.enumeration.OrderUseStatus;
 
 @Stateless
@@ -32,7 +33,6 @@ public class MemberOrderBean extends AbstractFacade<MemberOrder>
 
 	public MemberOrderBean()
 	{
-		// TODO Auto-generated constructor stub
 		super(MemberOrder.class);
 	}
 
@@ -99,6 +99,19 @@ public class MemberOrderBean extends AbstractFacade<MemberOrder>
 		Root<MemberOrder> order = criteria.from(MemberOrder.class);
 		criteria.select(order).where(cb.equal(order.get("memberNumber"), uno),cb.equal(order.get("useState"), OrderUseStatus.USING));
 		return em.createQuery(criteria).getResultList();
+	}
+
+	public List<MemberOrder> findNoPayByUid(String uno) {
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<MemberOrder> criteria = cb.createQuery(MemberOrder.class);
+		Root<MemberOrder> order = criteria.from(MemberOrder.class);
+		criteria.select(order).where(cb.equal(order.get("memberNumber"), uno),cb.equal(order.get("state"), OrderStatus.CREATED));
+		return em.createQuery(criteria).getResultList();
+	}
+
+	public void delByOrderNo(String orderNo) {
+		MemberOrder entity = findByOrderNo(orderNo);
+		if(entity!=null)remove(entity);
 	}
 	
 }

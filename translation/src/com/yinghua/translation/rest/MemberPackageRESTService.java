@@ -20,6 +20,7 @@ package com.yinghua.translation.rest;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -220,6 +221,64 @@ public class MemberPackageRESTService {
 	}
 	
 	/**
+	 * 查询用户待支付订单
+	 * 
+	 * @param params
+	 * @return
+	 */
+	@POST
+	@Path("/userNoPayOrders")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> userNoPayOrders(String params) {
+		Map<String, Object> req = new HashMap<>();
+		JSONObject obj = JSONObject.parseObject(params);
+		String uid = Objects.toString(obj.getString("uno"), "0");
+
+		List<MemberOrder> list = memberOrderBean.findNoPayByUid(uid);
+		if (list != null&&list.size()>0) {
+			req.put("orders", list);
+			req.put("count", list.size());
+			req.put("result", "success");
+			req.put("error_code", "000000");
+			req.put("error_msg", "");
+		} else {
+			req.put("result", "fail");
+			req.put("error_code", "20001");
+			req.put("error_msg", "查无信息");
+		}
+		return req;
+	}
+	
+	/**
+	 * 取消用户待支付订单
+	 * 
+	 * @param params
+	 * @return
+	 */
+	@POST
+	@Path("/cancelUserOrder")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> cancelUserOrder(String params) {
+		Map<String, Object> req = new HashMap<>();
+		JSONObject obj = JSONObject.parseObject(params);
+		String orderNo = Objects.toString(obj.getString("orderNo"),"0");
+		MemberOrder order = memberOrderBean.findByOrderNo(orderNo);
+		if(order!=null){
+			memberOrderBean.remove(order);
+			req.put("result", "success");
+			req.put("error_code", "000000");
+			req.put("error_msg", "");
+		}else{
+			req.put("result", "fail");
+			req.put("error_code", "20001");
+			req.put("error_msg", "无此订单信息");
+		}
+		return req;
+	}
+	
+	/**
 	 * 查询产品列表
 	 * 
 	 * @param params
@@ -296,8 +355,25 @@ public class MemberPackageRESTService {
 
 		List<PackageProductContent> pack = packageProductContentBean.findByPackageNo(packageNo);
 		if (pack != null) {
+			List<Map<String,Object>> packageProduct = new LinkedList<Map<String,Object>>();
+			for (PackageProductContent packageProductContent : pack) {
+				BaseProduct bp = baseProductBean.findByProductNo(packageProductContent.getProductNo());
+				if(bp!=null){
+					Map<String,Object> ppMap = new HashMap<String,Object>();
+					ppMap.put("type", packageProductContent.getType());
+					ppMap.put("times", packageProductContent.getTimes());
+					ppMap.put("productNo", bp.getProductNo());
+					ppMap.put("productName", bp.getProductName());
+					ppMap.put("bidPrice", bp.getBidPrice());
+					ppMap.put("price", bp.getPrice());
+					ppMap.put("desc", bp.getDesc());
+					ppMap.put("serviceType", bp.getServiceType());
+					packageProduct.add(ppMap);
+				}
+			}
+		
 			req.put("count", Objects.toString(pack.size(), "0"));
-			req.put("baseProducts", pack);
+			req.put("baseProducts", packageProduct);
 			req.put("result", "success");
 			req.put("error_code", "000000");
 			req.put("error_msg", "");
