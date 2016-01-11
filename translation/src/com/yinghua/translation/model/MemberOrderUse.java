@@ -10,7 +10,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "cc_member_order")
+@Table(name = "cc_member_order_use")
 public class MemberOrderUse implements Serializable{
 
 	private static final long serialVersionUID = 1L;

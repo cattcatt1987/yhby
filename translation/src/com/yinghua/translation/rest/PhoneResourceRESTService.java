@@ -23,6 +23,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -49,6 +50,7 @@ import com.pingplusplus.model.Charge;
 import com.pingplusplus.model.Event;
 import com.pingplusplus.model.Webhooks;
 import com.yinghua.translation.Constant;
+import com.yinghua.translation.handler.ServiceNoHandlerFactory;
 import com.yinghua.translation.model.Account;
 import com.yinghua.translation.model.CallRecord;
 import com.yinghua.translation.model.CommonData;
@@ -57,6 +59,7 @@ import com.yinghua.translation.model.MemberOrder;
 import com.yinghua.translation.model.MemberOrderUse;
 import com.yinghua.translation.model.Order;
 import com.yinghua.translation.model.PackageProduct;
+import com.yinghua.translation.model.PackageProductContent;
 import com.yinghua.translation.model.PayEasyLog;
 import com.yinghua.translation.model.PayWeixinLog;
 import com.yinghua.translation.model.Product;
@@ -714,16 +717,20 @@ public class PhoneResourceRESTService
 					//套餐内
 					Member member = memberBean.findMember(caller, "");
 					if(member!=null){
-						System.out.println("用户号码："+member.getMemberNumber());
-						List<MemberOrder> orders = memberOrderBean.findUsingOrderByUno(member.getMemberNumber());
-						if(orders!=null&&orders.size()>0){
-							for (MemberOrder memberOrder : orders) {
-								if("1003".equals(memberOrder.getPackageNo())||Constant.packageNoMap.get(callee).equals(memberOrder.getPackageNo())){
-									isOk = true;
-									break;
-								}
-							}
-						}
+						 
+						errorCode = ServiceNoHandlerFactory.createServiceNoHandler().processServiceNo(member.getMemberNumber(), callee, baseProductBean, memberOrderBean, memberOrderUseBean);
+						if("000000".equals(errorCode))isOk = true;
+						
+//						System.out.println("用户号码："+member.getMemberNumber());
+//						List<MemberOrder> orders = memberOrderBean.findUsingOrderByUno(member.getMemberNumber());
+//						if(orders!=null&&orders.size()>0){
+//							for (MemberOrder memberOrder : orders) {
+//								if("1003".equals(memberOrder.getPackageNo())||Constant.packageNoMap.get(callee).equals(memberOrder.getPackageNo())){
+//									isOk = true;
+//									break;
+//								}
+//							}
+//						}
 //				Account account = accountBean.findByMemberNo(member.getMemberNumber());
 //				if(account!=null&&account.getSurplusCallDuration()>0){
 //					req.put("result", "success");
@@ -882,11 +889,60 @@ public class PhoneResourceRESTService
 				 if(order!=null){
 					 if(order.getState()!=OrderStatus.FINISHED){
 						 order.setState(OrderStatus.FINISHED);
+						 List<PackageProductContent> ppcs = packageProductContentBean.findByPackageNo(order.getPackageNo());
+						 switch (order.getPackageType()) {
+						 case "1":
+						 //按天
+							for (PackageProductContent packageProductContent : ppcs) {
+								MemberOrderUse mou = new MemberOrderUse();
+								mou.setOrderNo(order.getOrderNo());
+								mou.setProductNo(packageProductContent.getProductNo());
+								mou.setTimes(packageProductContent.getTimes());
+								memberOrderUseBean.createMemberOrderUse(mou);
+							}
+							break;
+						 case "2":
+						 //按次
+								for (PackageProductContent packageProductContent : ppcs) {
+									MemberOrderUse mou = new MemberOrderUse();
+									mou.setOrderNo(order.getOrderNo());
+									mou.setProductNo(packageProductContent.getProductNo());
+									mou.setTimes(packageProductContent.getTimes());
+									memberOrderUseBean.createMemberOrderUse(mou);
+								}
+								List<MemberOrder> moList = memberOrderBean.findUsingOrderByUno(order.getMemberNumber(),"2");
+								for (MemberOrder memberOrder : moList) {
+									if(memberOrder.getServiceEndTime().getTime()<order.getServiceEndTime().getTime()){
+										memberOrder.setServiceEndTime(order.getServiceEndTime());
+										memberOrderBean.updateOrder(memberOrder);
+									}
+								}
+								
+							break;
+						 case "3":
+						 //按单项
+							JSONObject obj = JSONObject.parseObject(order.getRemark());
+							for (String key : obj.keySet()) {
+								MemberOrderUse mou = new MemberOrderUse();
+								mou.setOrderNo(order.getOrderNo());
+								mou.setProductNo(key);
+								mou.setTimes(obj.getIntValue(key));
+								memberOrderUseBean.createMemberOrderUse(mou);
+							}
+							List<MemberOrder> moList2 = memberOrderBean.findUsingOrderByUno(order.getMemberNumber(),"3");
+							for (MemberOrder memberOrder : moList2) {
+								if(memberOrder.getServiceEndTime().getTime()<order.getServiceEndTime().getTime()){
+									memberOrder.setServiceEndTime(order.getServiceEndTime());
+									memberOrderBean.updateOrder(memberOrder);
+								}
+							}
+							break;
+						}
 						 if(System.currentTimeMillis()>=order.getServiceTime().getTime()){
-							 Account account = accountBean.findByMemberNo(order.getMemberNumber());
-							 int addCall = order.getSurplusCallDuration()+account.getSurplusCallDuration();
-							 account.setSurplusCallDuration(addCall);
-							 accountBean.updateAccount(account);
+//							 Account account = accountBean.findByMemberNo(order.getMemberNumber());
+//							 int addCall = order.getSurplusCallDuration()+account.getSurplusCallDuration();
+//							 account.setSurplusCallDuration(addCall);
+//							 accountBean.updateAccount(account);
 							 order.setUseState(OrderUseStatus.USING);
 						 }
 						 memberOrderBean.updateOrder(order);
@@ -935,11 +991,45 @@ public class PhoneResourceRESTService
 								if(order!=null&&"1".equals(status[i])){
 									if(order.getState()!=OrderStatus.FINISHED){//重复订单不计费
 										 order.setState(OrderStatus.FINISHED);
+										 List<PackageProductContent> ppcs = packageProductContentBean.findByPackageNo(order.getPackageNo());
+										 switch (order.getPackageType()) {
+										 case "1":
+										 //按天
+											for (PackageProductContent packageProductContent : ppcs) {
+												MemberOrderUse mou = new MemberOrderUse();
+												mou.setOrderNo(order.getOrderNo());
+												mou.setProductNo(packageProductContent.getProductNo());
+												mou.setTimes(packageProductContent.getTimes());
+												memberOrderUseBean.createMemberOrderUse(mou);
+											}
+											break;
+										 case "2":
+										 //按次
+												for (PackageProductContent packageProductContent : ppcs) {
+													MemberOrderUse mou = new MemberOrderUse();
+													mou.setOrderNo(order.getOrderNo());
+													mou.setProductNo(packageProductContent.getProductNo());
+													mou.setTimes(packageProductContent.getTimes());
+													memberOrderUseBean.createMemberOrderUse(mou);
+												}
+											break;
+										 case "3":
+										 //按单项
+											JSONObject obj = JSONObject.parseObject(order.getRemark());
+											for (String key : obj.keySet()) {
+												MemberOrderUse mou = new MemberOrderUse();
+												mou.setOrderNo(order.getOrderNo());
+												mou.setProductNo(key);
+												mou.setTimes(obj.getIntValue(key));
+												memberOrderUseBean.createMemberOrderUse(mou);
+											}
+											break;
+										}
 										 if(System.currentTimeMillis()>=order.getServiceTime().getTime()){
-											 Account account = accountBean.findByMemberNo(order.getMemberNumber());
-											 int addCall = order.getSurplusCallDuration()+account.getSurplusCallDuration();
-											 account.setSurplusCallDuration(addCall);
-											 accountBean.updateAccount(account);
+//											 Account account = accountBean.findByMemberNo(order.getMemberNumber());
+//											 int addCall = order.getSurplusCallDuration()+account.getSurplusCallDuration();
+//											 account.setSurplusCallDuration(addCall);
+//											 accountBean.updateAccount(account);
 											 order.setUseState(OrderUseStatus.USING);
 										 }
 										 memberOrderBean.updateOrder(order);

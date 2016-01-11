@@ -77,4 +77,20 @@ public class BaseProductBean extends AbstractFacade<BaseProduct>
 		}
 	}
 
+	public BaseProduct findByServiceNo(String serviceNo) {
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<BaseProduct> criteria = cb.createQuery(BaseProduct.class);
+		Root<BaseProduct> product = criteria.from(BaseProduct.class);
+		criteria.select(product).where(cb.equal(product.get("serviceNo"), serviceNo));
+		Query query = em.createQuery(criteria);
+		if (query.getResultList().size() == 0)
+		{
+			return null;
+		}
+		else
+		{
+			return (BaseProduct) query.getSingleResult();
+		}
+	}
+
 }

@@ -113,5 +113,15 @@ public class MemberOrderBean extends AbstractFacade<MemberOrder>
 		MemberOrder entity = findByOrderNo(orderNo);
 		if(entity!=null)remove(entity);
 	}
+
+	public List<MemberOrder> findUsingOrderByUno(String uno,
+			String packageType) {
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<MemberOrder> criteria = cb.createQuery(MemberOrder.class);
+		Root<MemberOrder> order = criteria.from(MemberOrder.class);
+		criteria.select(order).where(cb.equal(order.get("memberNumber"), uno),cb.equal(order.get("useState"), OrderUseStatus.USING),cb.equal(order.get("packageType"), packageType))
+		.orderBy(cb.asc(order.get("serviceTime")));
+		return em.createQuery(criteria).getResultList();
+	}
 	
 }

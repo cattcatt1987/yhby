@@ -356,7 +356,7 @@ public class MemberResourceRESTService
 					account.setMemberNumber(member.getMemberNumber());
 					account.setCreateTime(new Date(System.currentTimeMillis()));
 					account.setRechargeTimes(0);
-					account.setSurplusCallDuration(0);
+					account.setSurplusCallDuration(36000);
 					account.setStatus(MemberStatus.NORMAL);
 					accountBean.register(account);
 					

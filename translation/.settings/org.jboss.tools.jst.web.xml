@@ -7,6 +7,201 @@
  <file-system NAME="src" location="%workspace.home%/../../resources" model-entity="FileSystemFolder"/>
  <file-system NAME="lib" location="%workspace.home%/lib" model-entity="FileSystemFolder"/>
  <file-system NAME="classes" location="%workspace.home%/classes" model-entity="FileSystemFolder"/>
+ <file-system NAME="lib-resources.jar"
+  location="D:\Program Files\MyEclipse2014\binary\com.sun.java.jdk7.win32.x86_64_1.7.0.u45\jre\lib\resources.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-jfr.jar"
+  location="D:\Program Files\MyEclipse2014\binary\com.sun.java.jdk7.win32.x86_64_1.7.0.u45\jre\lib\jfr.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-access-bridge-64.jar"
+  location="D:\Program Files\MyEclipse2014\binary\com.sun.java.jdk7.win32.x86_64_1.7.0.u45\jre\lib\ext\access-bridge-64.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-dnsns.jar"
+  location="D:\Program Files\MyEclipse2014\binary\com.sun.java.jdk7.win32.x86_64_1.7.0.u45\jre\lib\ext\dnsns.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-jaccess.jar"
+  location="D:\Program Files\MyEclipse2014\binary\com.sun.java.jdk7.win32.x86_64_1.7.0.u45\jre\lib\ext\jaccess.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-localedata.jar"
+  location="D:\Program Files\MyEclipse2014\binary\com.sun.java.jdk7.win32.x86_64_1.7.0.u45\jre\lib\ext\localedata.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-sunec.jar"
+  location="D:\Program Files\MyEclipse2014\binary\com.sun.java.jdk7.win32.x86_64_1.7.0.u45\jre\lib\ext\sunec.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-sunjce_provider.jar"
+  location="D:\Program Files\MyEclipse2014\binary\com.sun.java.jdk7.win32.x86_64_1.7.0.u45\jre\lib\ext\sunjce_provider.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-sunmscapi.jar"
+  location="D:\Program Files\MyEclipse2014\binary\com.sun.java.jdk7.win32.x86_64_1.7.0.u45\jre\lib\ext\sunmscapi.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-zipfs.jar"
+  location="D:\Program Files\MyEclipse2014\binary\com.sun.java.jdk7.win32.x86_64_1.7.0.u45\jre\lib\ext\zipfs.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-cdi-api-1.2.jar"
+  location="D:\code\M2\repository\javax\enterprise\cdi-api\1.2\cdi-api-1.2.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-javax.el-api-3.0.0.jar"
+  location="D:\code\M2\repository\javax\el\javax.el-api\3.0.0\javax.el-api-3.0.0.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-javax.interceptor-api-1.2.jar"
+  location="D:\code\M2\repository\javax\interceptor\javax.interceptor-api\1.2\javax.interceptor-api-1.2.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-javax.inject-1.jar"
+  location="D:\code\M2\repository\javax\inject\javax.inject\1\javax.inject-1.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-jboss-annotations-api_1.2_spec-1.0.0.Final.jar"
+  location="D:\code\M2\repository\org\jboss\spec\javax\annotation\jboss-annotations-api_1.2_spec\1.0.0.Final\jboss-annotations-api_1.2_spec-1.0.0.Final.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-jaxrs-api-3.0.10.Final.jar"
+  location="D:\code\M2\repository\org\jboss\resteasy\jaxrs-api\3.0.10.Final\jaxrs-api-3.0.10.Final.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-hibernate-jpa-2.1-api-1.0.0.Final.jar"
+  location="D:\code\M2\repository\org\hibernate\javax\persistence\hibernate-jpa-2.1-api\1.0.0.Final\hibernate-jpa-2.1-api-1.0.0.Final.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-hibernate-core-5.0.4.Final.jar"
+  location="D:\code\M2\repository\org\hibernate\hibernate-core\5.0.4.Final\hibernate-core-5.0.4.Final.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-jboss-logging-3.3.0.Final.jar"
+  location="D:\code\M2\repository\org\jboss\logging\jboss-logging\3.3.0.Final\jboss-logging-3.3.0.Final.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-javassist-3.18.1-GA.jar"
+  location="D:\code\M2\repository\org\javassist\javassist\3.18.1-GA\javassist-3.18.1-GA.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-antlr-2.7.7.jar"
+  location="D:\code\M2\repository\antlr\antlr\2.7.7\antlr-2.7.7.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-jandex-2.0.0.CR1.jar"
+  location="D:\code\M2\repository\org\jboss\jandex\2.0.0.CR1\jandex-2.0.0.CR1.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-dom4j-1.6.1.jar"
+  location="D:\code\M2\repository\dom4j\dom4j\1.6.1\dom4j-1.6.1.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-hibernate-commons-annotations-5.0.0.Final.jar"
+  location="D:\code\M2\repository\org\hibernate\common\hibernate-commons-annotations\5.0.0.Final\hibernate-commons-annotations-5.0.0.Final.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-hibernate-entitymanager-5.0.4.Final.jar"
+  location="D:\code\M2\repository\org\hibernate\hibernate-entitymanager\5.0.4.Final\hibernate-entitymanager-5.0.4.Final.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-jboss-ejb-api_3.2_spec-1.0.0.Final.jar"
+  location="D:\code\M2\repository\org\jboss\spec\javax\ejb\jboss-ejb-api_3.2_spec\1.0.0.Final\jboss-ejb-api_3.2_spec-1.0.0.Final.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-hibernate-validator-5.1.3.Final.jar"
+  location="D:\code\M2\repository\org\hibernate\hibernate-validator\5.1.3.Final\hibernate-validator-5.1.3.Final.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-validation-api-1.1.0.Final.jar"
+  location="D:\code\M2\repository\javax\validation\validation-api\1.1.0.Final\validation-api-1.1.0.Final.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-classmate-1.0.0.jar"
+  location="D:\code\M2\repository\com\fasterxml\classmate\1.0.0\classmate-1.0.0.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-log4j-slf4j-impl-2.1.jar"
+  location="D:\code\M2\repository\org\apache\logging\log4j\log4j-slf4j-impl\2.1\log4j-slf4j-impl-2.1.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-slf4j-api-1.7.7.jar"
+  location="D:\code\M2\repository\org\slf4j\slf4j-api\1.7.7\slf4j-api-1.7.7.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-jboss-jsf-api_2.2_spec-2.2.8.jar"
+  location="D:\code\M2\repository\org\jboss\spec\javax\faces\jboss-jsf-api_2.2_spec\2.2.8\jboss-jsf-api_2.2_spec-2.2.8.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-hibernate-jpamodelgen-4.3.5.Final.jar"
+  location="D:\code\M2\repository\org\hibernate\hibernate-jpamodelgen\4.3.5.Final\hibernate-jpamodelgen-4.3.5.Final.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-jboss-logging-annotations-1.2.0.Beta1.jar"
+  location="D:\code\M2\repository\org\jboss\logging\jboss-logging-annotations\1.2.0.Beta1\jboss-logging-annotations-1.2.0.Beta1.jar" model-entity="FileSystemJar"/>
+ <file-system
+  NAME="lib-hibernate-validator-annotation-processor-5.1.3.Final.jar"
+  location="D:\code\M2\repository\org\hibernate\hibernate-validator-annotation-processor\5.1.3.Final\hibernate-validator-annotation-processor-5.1.3.Final.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-junit-4.11.jar"
+  location="D:\code\M2\repository\junit\junit\4.11\junit-4.11.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-hamcrest-core-1.3.jar"
+  location="D:\code\M2\repository\org\hamcrest\hamcrest-core\1.3\hamcrest-core-1.3.jar" model-entity="FileSystemJar"/>
+ <file-system
+  NAME="lib-arquillian-junit-container-1.1.2.Final-wildfly-1.jar"
+  location="D:\code\M2\repository\org\jboss\arquillian\junit\arquillian-junit-container\1.1.2.Final-wildfly-1\arquillian-junit-container-1.1.2.Final-wildfly-1.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-arquillian-junit-core-1.1.2.Final-wildfly-1.jar"
+  location="D:\code\M2\repository\org\jboss\arquillian\junit\arquillian-junit-core\1.1.2.Final-wildfly-1\arquillian-junit-core-1.1.2.Final-wildfly-1.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-arquillian-test-api-1.1.2.Final-wildfly-1.jar"
+  location="D:\code\M2\repository\org\jboss\arquillian\test\arquillian-test-api\1.1.2.Final-wildfly-1\arquillian-test-api-1.1.2.Final-wildfly-1.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-arquillian-core-api-1.1.2.Final-wildfly-1.jar"
+  location="D:\code\M2\repository\org\jboss\arquillian\core\arquillian-core-api\1.1.2.Final-wildfly-1\arquillian-core-api-1.1.2.Final-wildfly-1.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-arquillian-test-spi-1.1.2.Final-wildfly-1.jar"
+  location="D:\code\M2\repository\org\jboss\arquillian\test\arquillian-test-spi\1.1.2.Final-wildfly-1\arquillian-test-spi-1.1.2.Final-wildfly-1.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-arquillian-core-spi-1.1.2.Final-wildfly-1.jar"
+  location="D:\code\M2\repository\org\jboss\arquillian\core\arquillian-core-spi\1.1.2.Final-wildfly-1\arquillian-core-spi-1.1.2.Final-wildfly-1.jar" model-entity="FileSystemJar"/>
+ <file-system
+  NAME="lib-arquillian-container-test-api-1.1.2.Final-wildfly-1.jar"
+  location="D:\code\M2\repository\org\jboss\arquillian\container\arquillian-container-test-api\1.1.2.Final-wildfly-1\arquillian-container-test-api-1.1.2.Final-wildfly-1.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-shrinkwrap-api-1.1.2.jar"
+  location="D:\code\M2\repository\org\jboss\shrinkwrap\shrinkwrap-api\1.1.2\shrinkwrap-api-1.1.2.jar" model-entity="FileSystemJar"/>
+ <file-system
+  NAME="lib-arquillian-container-test-spi-1.1.2.Final-wildfly-1.jar"
+  location="D:\code\M2\repository\org\jboss\arquillian\container\arquillian-container-test-spi\1.1.2.Final-wildfly-1\arquillian-container-test-spi-1.1.2.Final-wildfly-1.jar" model-entity="FileSystemJar"/>
+ <file-system
+  NAME="lib-arquillian-core-impl-base-1.1.2.Final-wildfly-1.jar"
+  location="D:\code\M2\repository\org\jboss\arquillian\core\arquillian-core-impl-base\1.1.2.Final-wildfly-1\arquillian-core-impl-base-1.1.2.Final-wildfly-1.jar" model-entity="FileSystemJar"/>
+ <file-system
+  NAME="lib-arquillian-test-impl-base-1.1.2.Final-wildfly-1.jar"
+  location="D:\code\M2\repository\org\jboss\arquillian\test\arquillian-test-impl-base\1.1.2.Final-wildfly-1\arquillian-test-impl-base-1.1.2.Final-wildfly-1.jar" model-entity="FileSystemJar"/>
+ <file-system
+  NAME="lib-arquillian-container-impl-base-1.1.2.Final-wildfly-1.jar"
+  location="D:\code\M2\repository\org\jboss\arquillian\container\arquillian-container-impl-base\1.1.2.Final-wildfly-1\arquillian-container-impl-base-1.1.2.Final-wildfly-1.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-arquillian-config-api-1.1.2.Final-wildfly-1.jar"
+  location="D:\code\M2\repository\org\jboss\arquillian\config\arquillian-config-api\1.1.2.Final-wildfly-1\arquillian-config-api-1.1.2.Final-wildfly-1.jar" model-entity="FileSystemJar"/>
+ <file-system
+  NAME="lib-arquillian-config-impl-base-1.1.2.Final-wildfly-1.jar"
+  location="D:\code\M2\repository\org\jboss\arquillian\config\arquillian-config-impl-base\1.1.2.Final-wildfly-1\arquillian-config-impl-base-1.1.2.Final-wildfly-1.jar" model-entity="FileSystemJar"/>
+ <file-system
+  NAME="lib-arquillian-container-test-impl-base-1.1.2.Final-wildfly-1.jar"
+  location="D:\code\M2\repository\org\jboss\arquillian\container\arquillian-container-test-impl-base\1.1.2.Final-wildfly-1\arquillian-container-test-impl-base-1.1.2.Final-wildfly-1.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-shrinkwrap-impl-base-1.1.2.jar"
+  location="D:\code\M2\repository\org\jboss\shrinkwrap\shrinkwrap-impl-base\1.1.2\shrinkwrap-impl-base-1.1.2.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-shrinkwrap-spi-1.1.2.jar"
+  location="D:\code\M2\repository\org\jboss\shrinkwrap\shrinkwrap-spi\1.1.2\shrinkwrap-spi-1.1.2.jar" model-entity="FileSystemJar"/>
+ <file-system
+  NAME="lib-arquillian-protocol-servlet-1.1.2.Final-wildfly-1.jar"
+  location="D:\code\M2\repository\org\jboss\arquillian\protocol\arquillian-protocol-servlet\1.1.2.Final-wildfly-1\arquillian-protocol-servlet-1.1.2.Final-wildfly-1.jar" model-entity="FileSystemJar"/>
+ <file-system
+  NAME="lib-arquillian-container-spi-1.1.2.Final-wildfly-1.jar"
+  location="D:\code\M2\repository\org\jboss\arquillian\container\arquillian-container-spi\1.1.2.Final-wildfly-1\arquillian-container-spi-1.1.2.Final-wildfly-1.jar" model-entity="FileSystemJar"/>
+ <file-system
+  NAME="lib-shrinkwrap-descriptors-api-base-2.0.0-alpha-3.jar"
+  location="D:\code\M2\repository\org\jboss\shrinkwrap\descriptors\shrinkwrap-descriptors-api-base\2.0.0-alpha-3\shrinkwrap-descriptors-api-base-2.0.0-alpha-3.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-shrinkwrap-descriptors-spi-2.0.0-alpha-3.jar"
+  location="D:\code\M2\repository\org\jboss\shrinkwrap\descriptors\shrinkwrap-descriptors-spi\2.0.0-alpha-3\shrinkwrap-descriptors-spi-2.0.0-alpha-3.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-fastjson-1.2.7.jar"
+  location="D:\code\M2\repository\com\alibaba\fastjson\1.2.7\fastjson-1.2.7.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-gson-2.3.1.jar"
+  location="D:\code\M2\repository\com\google\code\gson\gson\2.3.1\gson-2.3.1.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-commons-codec-1.10.jar"
+  location="D:\code\M2\repository\commons-codec\commons-codec\1.10\commons-codec-1.10.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-log4j-1.2.17.jar"
+  location="D:\code\M2\repository\log4j\log4j\1.2.17\log4j-1.2.17.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-json-lib-2.4-jdk15.jar"
+  location="D:\code\M2\repository\net\sf\json-lib\json-lib\2.4\json-lib-2.4-jdk15.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-commons-collections-3.2.1.jar"
+  location="D:\code\M2\repository\commons-collections\commons-collections\3.2.1\commons-collections-3.2.1.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-commons-logging-1.1.1.jar"
+  location="D:\code\M2\repository\commons-logging\commons-logging\1.1.1\commons-logging-1.1.1.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-commons-beanutils-1.9.2.jar"
+  location="D:\code\M2\repository\commons-beanutils\commons-beanutils\1.9.2\commons-beanutils-1.9.2.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-commons-lang-2.6.jar"
+  location="D:\code\M2\repository\commons-lang\commons-lang\2.6\commons-lang-2.6.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-ezmorph-1.0.6.jar"
+  location="D:\code\M2\repository\net\sf\ezmorph\ezmorph\1.0.6\ezmorph-1.0.6.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-httpclient-4.3.5.jar"
+  location="D:\code\M2\repository\org\apache\httpcomponents\httpclient\4.3.5\httpclient-4.3.5.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-httpcore-4.3.2.jar"
+  location="D:\code\M2\repository\org\apache\httpcomponents\httpcore\4.3.2\httpcore-4.3.2.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-rest-api-sdk-1.4.1.jar"
+  location="D:\code\M2\repository\com\paypal\sdk\rest-api-sdk\1.4.1\rest-api-sdk-1.4.1.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-log4j-api-2.1.jar"
+  location="D:\code\M2\repository\org\apache\logging\log4j\log4j-api\2.1\log4j-api-2.1.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-log4j-core-2.1.jar"
+  location="D:\code\M2\repository\org\apache\logging\log4j\log4j-core\2.1\log4j-core-2.1.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-resteasy-multipart-provider-3.0.10.Final.jar"
+  location="D:\code\M2\repository\org\jboss\resteasy\resteasy-multipart-provider\3.0.10.Final\resteasy-multipart-provider-3.0.10.Final.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-resteasy-jaxrs-3.0.10.Final.jar"
+  location="D:\code\M2\repository\org\jboss\resteasy\resteasy-jaxrs\3.0.10.Final\resteasy-jaxrs-3.0.10.Final.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-jboss-annotations-api_1.1_spec-1.0.1.Final.jar"
+  location="D:\code\M2\repository\org\jboss\spec\javax\annotation\jboss-annotations-api_1.1_spec\1.0.1.Final\jboss-annotations-api_1.1_spec-1.0.1.Final.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-activation-1.1.1.jar"
+  location="D:\code\M2\repository\javax\activation\activation\1.1.1\activation-1.1.1.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-commons-io-2.1.jar"
+  location="D:\code\M2\repository\commons-io\commons-io\2.1\commons-io-2.1.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-jcip-annotations-1.0.jar"
+  location="D:\code\M2\repository\net\jcip\jcip-annotations\1.0\jcip-annotations-1.0.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-resteasy-client-3.0.10.Final.jar"
+  location="D:\code\M2\repository\org\jboss\resteasy\resteasy-client\3.0.10.Final\resteasy-client-3.0.10.Final.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-resteasy-jaxb-provider-3.0.10.Final.jar"
+  location="D:\code\M2\repository\org\jboss\resteasy\resteasy-jaxb-provider\3.0.10.Final\resteasy-jaxb-provider-3.0.10.Final.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-jaxb-impl-2.2.7.jar"
+  location="D:\code\M2\repository\com\sun\xml\bind\jaxb-impl\2.2.7\jaxb-impl-2.2.7.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-jaxb-core-2.2.7.jar"
+  location="D:\code\M2\repository\com\sun\xml\bind\jaxb-core\2.2.7\jaxb-core-2.2.7.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-jaxb-api-2.2.7.jar"
+  location="D:\code\M2\repository\javax\xml\bind\jaxb-api\2.2.7\jaxb-api-2.2.7.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-istack-commons-runtime-2.16.jar"
+  location="D:\code\M2\repository\com\sun\istack\istack-commons-runtime\2.16\istack-commons-runtime-2.16.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-FastInfoset-1.2.12.jar"
+  location="D:\code\M2\repository\com\sun\xml\fastinfoset\FastInfoset\1.2.12\FastInfoset-1.2.12.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-jsr173_api-1.0.jar"
+  location="D:\code\M2\repository\javax\xml\bind\jsr173_api\1.0\jsr173_api-1.0.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-mail-1.5.0-b01.jar"
+  location="D:\code\M2\repository\javax\mail\mail\1.5.0-b01\mail-1.5.0-b01.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-apache-mime4j-0.6.jar"
+  location="D:\code\M2\repository\org\apache\james\apache-mime4j\0.6\apache-mime4j-0.6.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="lib-pingpp-java-2.1.1.jar"
+  location="E:\git\yhby\translation\WebRoot\WEB-INF\lib\pingpp-java-2.1.1.jar" model-entity="FileSystemJar"/>
+ <file-system NAME="src-1" location="%workspace.home%/../../src" model-entity="FileSystemFolder"/>
+ <file-system NAME="src-2"
+  location="%workspace.home%/../../src/test/java" model-entity="FileSystemFolder"/>
  <web SERVLET_VERSION="2.4" model-entity="JstWeb" model-path="/web.xml">
   <module URI="/WEB-INF/faces-config.xml" model-entity="WebJSFModule"
    model-path="/faces-config.xml" src="src" web-root="WEB-ROOT"/>

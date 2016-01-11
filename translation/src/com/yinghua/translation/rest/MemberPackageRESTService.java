@@ -251,6 +251,37 @@ public class MemberPackageRESTService {
 	}
 	
 	/**
+	 * 查询用户全部服务
+	 * 
+	 * @param params
+	 * @return
+	 */
+	@POST
+	@Path("/userAllService")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> userAllService(String params) {
+		
+		Map<String, Object> req = new HashMap<>();
+		JSONObject obj = JSONObject.parseObject(params);
+		String uid = Objects.toString(obj.getString("uno"), "0");
+
+		List<MemberOrder> list = memberOrderBean.findUsingOrderByUno(uid, "3");
+		if (list != null&&list.size()>0) {
+			req.put("orders", list);
+			req.put("count", list.size());
+			req.put("result", "success");
+			req.put("error_code", "000000");
+			req.put("error_msg", "");
+		} else {
+			req.put("result", "fail");
+			req.put("error_code", "20001");
+			req.put("error_msg", "查无信息");
+		}
+		return req;
+	}
+	
+	/**
 	 * 取消用户待支付订单
 	 * 
 	 * @param params

@@ -35,9 +35,20 @@ public class MemberOrderUseBean extends AbstractFacade<MemberOrderUse>
 		super(MemberOrderUse.class);
 	}
 	
+	public Long createMemberOrderUse(MemberOrderUse order)
+	{
+		// check if user exists
+		super.create(order);
+		return order.getId();
+	}
 	public Product findById(Long id)
 	{
 		return em.find(Product.class, id);
+	}
+	
+	public void updateMemberOrderUse(MemberOrderUse order)
+	{
+		em.merge(order);
 	}
 	
 	public List<MemberOrderUse> findAll()
@@ -64,6 +75,14 @@ public class MemberOrderUseBean extends AbstractFacade<MemberOrderUse>
 		{
 			return (MemberOrderUse) query.getSingleResult();
 		}
+	}
+
+	public List<MemberOrderUse> findByOrderNo(String orderNo) {
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<MemberOrderUse> criteria = cb.createQuery(MemberOrderUse.class);
+		Root<MemberOrderUse> order = criteria.from(MemberOrderUse.class);
+		criteria.select(order).where(cb.equal(order.get("orderNo"), orderNo));
+		return em.createQuery(criteria).getResultList();
 	}
 
 }
