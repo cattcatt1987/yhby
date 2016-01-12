@@ -48,6 +48,7 @@ import com.yinghua.translation.model.Account;
 import com.yinghua.translation.model.BaseProduct;
 import com.yinghua.translation.model.LanuageTariff;
 import com.yinghua.translation.model.MemberOrder;
+import com.yinghua.translation.model.MemberOrderUse;
 import com.yinghua.translation.model.MemberPackage;
 import com.yinghua.translation.model.Order;
 import com.yinghua.translation.model.PackageProduct;
@@ -58,6 +59,7 @@ import com.yinghua.translation.service.AccountBean;
 import com.yinghua.translation.service.BaseProductBean;
 import com.yinghua.translation.service.LanuageTariffBean;
 import com.yinghua.translation.service.MemberOrderBean;
+import com.yinghua.translation.service.MemberOrderUseBean;
 import com.yinghua.translation.service.MemberPackageBean;
 import com.yinghua.translation.service.OrderBean;
 import com.yinghua.translation.service.PackageProductBean;
@@ -99,6 +101,9 @@ public class MemberPackageRESTService {
 	
 	@EJB
 	private MemberOrderBean memberOrderBean;
+	
+	@EJB
+	private MemberOrderUseBean memberOrderUseBean;
 	
 	@EJB
 	private LanuageTariffBean lanuageTariffBean;
@@ -268,8 +273,45 @@ public class MemberPackageRESTService {
 
 		List<MemberOrder> list = memberOrderBean.findUsingOrderByUno(uid, "3");
 		if (list != null&&list.size()>0) {
-			req.put("orders", list);
-			req.put("count", list.size());
+			List<BaseProduct> bps = baseProductBean.findAll();
+			Map<String,BaseProduct> bpMap = new HashMap<String,BaseProduct>();
+			for (BaseProduct baseProduct : bps) {
+				bpMap.put(baseProduct.getProductNo(), baseProduct);
+			}
+			List<Map<String,Object>> life = new LinkedList<Map<String,Object>>();
+			List<Map<String,Object>> hurry = new LinkedList<Map<String,Object>>();
+			Map<String,Integer> resultMap = new HashMap<String,Integer>();
+			for (MemberOrder memberOrder : list) {
+				List<MemberOrderUse> useList = memberOrderUseBean.findByOrderNo(memberOrder.getOrderNo());
+				for (MemberOrderUse memberOrderUse : useList) {
+					String pNo = memberOrderUse.getProductNo();
+					int times = memberOrderUse.getTimes();
+					if(resultMap.containsKey(pNo)){
+						times = resultMap.get(memberOrderUse.getProductNo()) + times;
+					}
+					resultMap.put(pNo,times);
+				}
+			}
+			
+			for (String pNo : resultMap.keySet()) {
+				BaseProduct bp = bpMap.get(pNo);
+				Map<String,Object> pkgMap = new HashMap<String,Object>();
+				pkgMap.put("productNo", pNo);
+				pkgMap.put("productName", bp.getProductName());
+				pkgMap.put("serviceType", bp.getServiceType());
+				pkgMap.put("times", resultMap.get(pNo));
+				if("生活类".equals(bp.getServiceType())){
+					life.add(pkgMap);
+				}else if("应急类".equals(bp.getServiceType())){
+					hurry.add(pkgMap);
+				}
+			}
+			
+			req.put("life", life);
+			req.put("lifeCount", life.size());
+			req.put("hurry", hurry);
+			req.put("hurryCount", hurry.size());
+			req.put("seviceEndTime", list.get(0).getServiceEndTime());
 			req.put("result", "success");
 			req.put("error_code", "000000");
 			req.put("error_msg", "");
