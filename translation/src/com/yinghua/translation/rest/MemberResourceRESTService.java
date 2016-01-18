@@ -358,9 +358,9 @@ public class MemberResourceRESTService
 					if (list != null && list.size() > 0) {
 						member.setCode(list.get(0).getCode()); //保存邀请码到member表
 					} else {
-						req.put("result", "fail");
-						req.put("error_code", "20001");
-						req.put("error_msg", "邀请码查无信息");
+//						req.put("result", "fail");
+//						req.put("error_code", "20001");
+//						req.put("error_msg", "邀请码查无信息");
 					}
 					Long id = repository.register(member);
 					Account account = new Account();
@@ -375,22 +375,22 @@ public class MemberResourceRESTService
 					accountBean.register(account);
 					
 					
-					MemberOrder mo = new MemberOrder();
-					mo.setMemberNumber(member.getMemberNumber());
-					mo.setOrderNo(OrderNoUtil.getOrderNo("OR"));
-					mo.setOrderPrice("0");
-					mo.setOrderTime(new Date());
-					mo.setPackageDesc("问路、打车、租车、餐饮、退税、购物、酒店、购票、其他");
-					mo.setPackageName("生活服务套餐");
-					mo.setPackageNo("1002");
-					mo.setPayWay("0");
-					mo.setServiceTime(new Date());
-					mo.setState(OrderStatus.FINISHED);
-					mo.setUseState(OrderUseStatus.USING);
-					mo.setUseDate(30);
-					mo.setSurplusCallDuration(8000*30);
-					mo.setPackageType("1");
-					memberOrderBean.createOrder(mo);
+//					MemberOrder mo = new MemberOrder();
+//					mo.setMemberNumber(member.getMemberNumber());
+//					mo.setOrderNo(OrderNoUtil.getOrderNo("OR"));
+//					mo.setOrderPrice("0");
+//					mo.setOrderTime(new Date());
+//					mo.setPackageDesc("问路、打车、租车、餐饮、退税、购物、酒店、购票、其他");
+//					mo.setPackageName("生活服务套餐");
+//					mo.setPackageNo("1002");
+//					mo.setPayWay("0");
+//					mo.setServiceTime(new Date());
+//					mo.setState(OrderStatus.FINISHED);
+//					mo.setUseState(OrderUseStatus.USING);
+//					mo.setUseDate(30);
+//					mo.setSurplusCallDuration(8000*30);
+//					mo.setPackageType("1");
+//					memberOrderBean.createOrder(mo);
 	
 				}
 				else

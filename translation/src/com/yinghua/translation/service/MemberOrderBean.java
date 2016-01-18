@@ -80,6 +80,23 @@ public class MemberOrderBean extends AbstractFacade<MemberOrder>
 		}
 	}
 
+	public MemberOrder findByPayNo(String payNo)
+	{
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<MemberOrder> criteria = cb.createQuery(MemberOrder.class);
+		Root<MemberOrder> order = criteria.from(MemberOrder.class);
+		criteria.select(order).where(cb.equal(order.get("payNo"), payNo));
+		Query query = em.createQuery(criteria);
+		if (query.getResultList().size() == 0)
+		{
+			return null;
+		}
+		else
+			
+		{
+			return (MemberOrder) query.getSingleResult();
+		}
+	}
 	
 	
 	

@@ -202,51 +202,71 @@ public class PhoneResourceRESTService
 		int use_date = obj.getIntValue("use_date");
 		String service_end_time = obj.getString("service_end_time");
 		String remark = obj.getString("remark");
+		String orderNo = obj.getString("orderNo");
 		
 		PackageProduct packageProduct = packageProductBean.findByPackageNo(prod_no);
 		
 		if(packageProduct!=null){
+			MemberOrder order = null;
+			Long id = 0L;
 			//插入用户订单表
-			MemberOrder order = new MemberOrder();
-			order.setMemberNumber(uno);
-			order.setOrderTime(new Date());
-			order.setPackageNo(prod_no);
-			order.setPackageName(packageProduct.getSubject());
-			order.setPackageType(packageProduct.getType());
-			order.setPackageDesc(packageProduct.getDesc());
-			if("3".equals(pay_way)||"4".equals(pay_way)){
-				String str = new SimpleDateFormat("yyyyMMdd").format(new Date(System
-						.currentTimeMillis()));
-				order.setOrderNo(str+"-"+businessNo+"-"+OrderNoUtil.getOrderNo("OR"));
-			}else{
-				order.setOrderNo(OrderNoUtil.getOrderNo("OR"));
-			}
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
-			try {
-				order.setServiceTime(sdf.parse(service_time));
-			} catch (ParseException e1) {
-				e1.printStackTrace();
-				order.setServiceTime(new Date());
-			}
-			
-			try {
-				if(service_end_time!=null){
-					order.setServiceEndTime(sdf.parse(service_end_time));
+			if(orderNo!=null){
+				order = memberOrderBean.findByOrderNo(orderNo);
+				if(order!=null){
+					if("3".equals(pay_way)||"4".equals(pay_way)){
+						String str = new SimpleDateFormat("yyyyMMdd").format(new Date(System
+								.currentTimeMillis()));
+						order.setPayNo(str+"-"+businessNo+"-"+OrderNoUtil.getOrderNo("OR"));
+					}else{
+						order.setPayNo(OrderNoUtil.getOrderNo("OR"));
+					}
+					order.setPayWay(pay_way);
+					memberOrderBean.updateOrder(order);
+					id = order.getId();
 				}
-			} catch (ParseException e1) {
-				e1.printStackTrace();
-				order.setServiceTime(new Date(System.currentTimeMillis()+30*24*60*60*1000));
+			}else{
+				order = new MemberOrder();
+				order.setMemberNumber(uno);
+				order.setOrderTime(new Date());
+				order.setPackageNo(prod_no);
+				order.setPackageName(packageProduct.getSubject());
+				order.setPackageType(packageProduct.getType());
+				order.setPackageDesc(packageProduct.getDesc());
+				if("3".equals(pay_way)||"4".equals(pay_way)){
+					String str = new SimpleDateFormat("yyyyMMdd").format(new Date(System
+							.currentTimeMillis()));
+					order.setOrderNo(str+"-"+businessNo+"-"+OrderNoUtil.getOrderNo("OR"));
+				}else{
+					order.setOrderNo(OrderNoUtil.getOrderNo("OR"));
+				}
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+				try {
+					order.setServiceTime(sdf.parse(service_time));
+				} catch (ParseException e1) {
+					e1.printStackTrace();
+					order.setServiceTime(new Date());
+				}
+				
+				try {
+					if(service_end_time!=null){
+						order.setServiceEndTime(sdf.parse(service_end_time));
+					}
+				} catch (ParseException e1) {
+					e1.printStackTrace();
+					order.setServiceTime(new Date(System.currentTimeMillis()+30*24*60*60*1000));
+				}
+				
+				order.setSurplusCallDuration(packageProduct.getSurplusCallDuration()*use_date);
+				order.setUseDate(use_date);
+				order.setUseState(OrderUseStatus.PERPARE);
+				order.setState(OrderStatus.CREATED);
+				order.setOrderPrice(String.valueOf(orderPrice));
+				order.setPayWay(pay_way);
+				order.setRemark(remark);
+				order.setPayNo(order.getOrderNo());
+				
+				id = memberOrderBean.createOrder(order);
 			}
-			
-			order.setSurplusCallDuration(packageProduct.getSurplusCallDuration()*use_date);
-			order.setUseDate(use_date);
-			order.setUseState(OrderUseStatus.PERPARE);
-			order.setState(OrderStatus.CREATED);
-			order.setOrderPrice(String.valueOf(orderPrice));
-			order.setPayWay(pay_way);
-			order.setRemark(remark);
-			
-			Long id = memberOrderBean.createOrder(order);
 			
 			Map<String, Object> chargeMap = new HashMap<String, Object>();
 			Charge charge;
@@ -257,12 +277,12 @@ public class PhoneResourceRESTService
 				chargeMap.put("currency", "cny");
 				chargeMap.put("subject", order.getPackageName());
 				chargeMap.put("body", "Your Body");
-				chargeMap.put("order_no", order.getOrderNo());
+				chargeMap.put("order_no", order.getPayNo());
 				
 				switch (pay_way)
 				{
 					case "0":
-						req.put("order_no", order.getOrderNo());
+						req.put("order_no", order.getPayNo());
 						req.put("amount", price);
 						req.put("pay_way", order.getPayWay());
 						req.put("credential", "");
@@ -280,7 +300,7 @@ public class PhoneResourceRESTService
 //							orderBean.updateOrder(order);
 							req.put("charge", JSONObject.toJSONString(charge)
 									.toString());
-							req.put("order_no", order.getOrderNo());
+							req.put("order_no", order.getPayNo());
 							req.put("amount", price);
 							req.put("pay_way", order.getPayWay());
 //							req.put("credential", order.getCredential());
@@ -300,7 +320,7 @@ public class PhoneResourceRESTService
 					case "2":
 						chargeMap.put("channel", "wx");
 						chargeMap.put("client_ip", "127.0.0.1");
-						chargeMap.put("order_no",  order.getOrderNo());
+						chargeMap.put("order_no",  order.getPayNo());
 						//Integer am = order.getAmount().multiply(new BigDecimal(100)).;
 						chargeMap.put("amount", price);
 						try
@@ -312,7 +332,7 @@ public class PhoneResourceRESTService
 							req.put("charge", JSONObject.toJSONString(charge)
 									.toString());
 							req.put("charge_id", charge.getId());
-							req.put("order_no", order.getOrderNo());
+							req.put("order_no", order.getPayNo());
 							req.put("amount", order.getOrderPrice());
 							req.put("pay_way", order.getPayWay());
 //							req.put("credential", order.getCredential());
@@ -330,7 +350,7 @@ public class PhoneResourceRESTService
 						}
 						break;
 					case "3":
-						req.put("order_no", order.getOrderNo());
+						req.put("order_no", order.getPayNo());
 						req.put("amount", order.getOrderPrice());
 						req.put("pay_way", order.getPayWay());
 						req.put("business_no", businessNo);
@@ -340,7 +360,7 @@ public class PhoneResourceRESTService
 						req.put("error_msg", "");
 						break;
 					case "4":
-						req.put("order_no", order.getOrderNo());
+						req.put("order_no", order.getPayNo());
 						req.put("amount", order.getOrderPrice());
 						req.put("pay_way", order.getPayWay());
 						req.put("businessNo", businessNo);
@@ -350,6 +370,10 @@ public class PhoneResourceRESTService
 						req.put("error_msg", "");
 						break;
 				}
+			}else{
+				req.put("result", "fail");
+				req.put("error_code", "5005");
+				req.put("error_msg", "订单不存在");
 			}
 			
 		}else{
@@ -885,7 +909,7 @@ public class PhoneResourceRESTService
 			Map<String,Object> object = (Map<String, Object>) event.getData().get("object");
 			 if(object!=null&&object.size()>0){
 				 String orderNo = Objects.toString(object.get("order_no"),"0");
-				 MemberOrder order = memberOrderBean.findByOrderNo(orderNo);
+				 MemberOrder order = memberOrderBean.findByPayNo(orderNo);
 				 if(order!=null){
 					 if(order.getState()!=OrderStatus.FINISHED){
 						 order.setState(OrderStatus.FINISHED);
@@ -987,7 +1011,7 @@ public class PhoneResourceRESTService
 						if(oid[i]!=null){
 							try{
 								String orderNo = Objects.toString(oid[i]);
-								MemberOrder order = memberOrderBean.findByOrderNo(orderNo);
+								MemberOrder order = memberOrderBean.findByPayNo(orderNo);
 								if(order!=null&&"1".equals(status[i])){
 									if(order.getState()!=OrderStatus.FINISHED){//重复订单不计费
 										 order.setState(OrderStatus.FINISHED);
@@ -1066,7 +1090,7 @@ public class PhoneResourceRESTService
 	}
 	
 	/**
-	 * 接收ping++异步支付结果通知
+	 * 接收微信异步支付结果通知
 	 * 
 	 * @param params
 	 * @return

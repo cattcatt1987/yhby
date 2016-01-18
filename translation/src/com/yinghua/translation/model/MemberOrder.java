@@ -64,6 +64,9 @@ public class MemberOrder implements java.io.Serializable
 	private String remark;// remark 为自由组合套餐预留，存放单项及次数关系
 	@Column(name = "service_end_time")
 	private Date serviceEndTime;//服务有效截止日期，为按次套餐使用
+	@Column(name = "pay_no")
+	private String payNo;//支付标识
+	
 	public MemberOrder()
 	{}
 
@@ -208,6 +211,14 @@ public class MemberOrder implements java.io.Serializable
 
 	public void setServiceEndTime(Date serviceEndTime) {
 		this.serviceEndTime = serviceEndTime;
+	}
+
+	public String getPayNo() {
+		return payNo;
+	}
+
+	public void setPayNo(String payNo) {
+		this.payNo = payNo;
 	}
 
 
