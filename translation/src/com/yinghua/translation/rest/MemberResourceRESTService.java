@@ -373,6 +373,8 @@ public class MemberResourceRESTService
 					account.setSurplusCallDuration(36000);
 					account.setStatus(MemberStatus.NORMAL);
 					accountBean.register(account);
+					
+					
 					MemberOrder mo = new MemberOrder();
 					mo.setMemberNumber(member.getMemberNumber());
 					mo.setOrderNo(OrderNoUtil.getOrderNo("OR"));
