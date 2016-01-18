@@ -16,12 +16,14 @@
  */
 package com.yinghua.translation.rest;
 
-
 import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
@@ -53,18 +55,23 @@ import com.yinghua.translation.model.MemberPackage;
 import com.yinghua.translation.model.Order;
 import com.yinghua.translation.model.PackageProduct;
 import com.yinghua.translation.model.PackageProductContent;
+import com.yinghua.translation.model.PartnerCode;
+import com.yinghua.translation.model.Preferential;
 import com.yinghua.translation.model.Product;
 import com.yinghua.translation.model.enumeration.OrderStatus;
 import com.yinghua.translation.service.AccountBean;
 import com.yinghua.translation.service.BaseProductBean;
 import com.yinghua.translation.service.LanuageTariffBean;
+import com.yinghua.translation.service.MemberBean;
 import com.yinghua.translation.service.MemberOrderBean;
 import com.yinghua.translation.service.MemberOrderUseBean;
 import com.yinghua.translation.service.MemberPackageBean;
 import com.yinghua.translation.service.OrderBean;
 import com.yinghua.translation.service.PackageProductBean;
 import com.yinghua.translation.service.PackageProductContentBean;
+import com.yinghua.translation.service.PartnerCodeBean;
 import com.yinghua.translation.service.PaymentBean;
+import com.yinghua.translation.service.PreferentialBean;
 import com.yinghua.translation.service.ProductBean;
 import com.yinghua.translation.util.ClassLoaderUtil;
 
@@ -86,27 +93,33 @@ public class MemberPackageRESTService {
 
 	@EJB
 	private BaseProductBean baseProductBean;
-	
+
 	@EJB
 	private PackageProductBean packageProductBean;
-	
+
 	@EJB
 	private PackageProductContentBean packageProductContentBean;
-	
+
 	@EJB
 	private AccountBean accountBean;
 
 	@EJB
 	private OrderBean orderBean;
-	
+
 	@EJB
 	private MemberOrderBean memberOrderBean;
-	
+
 	@EJB
 	private MemberOrderUseBean memberOrderUseBean;
-	
+
 	@EJB
 	private LanuageTariffBean lanuageTariffBean;
+	@EJB
+	private PartnerCodeBean partnercodebean;
+	@EJB
+	private MemberBean memberbean;
+	@EJB
+	private PreferentialBean preferentialbean;
 
 	// private static final String key = "p5tvi9dst3wi4";
 	// private static final String secret = "9jcy7Nbq3OU0YB";
@@ -144,9 +157,9 @@ public class MemberPackageRESTService {
 		JSONObject obj = JSONObject.parseObject(params);
 		String uid = Objects.toString(obj.getString("uid"), "0");
 
-//		List<MemberPackage> pack = memberPackageBean.finByMemberId(Objects
-//				.toString(obj.getString("uno"), "0"));
-//		List<MemberPackage> list = new ArrayList<>();
+		// List<MemberPackage> pack = memberPackageBean.finByMemberId(Objects
+		// .toString(obj.getString("uno"), "0"));
+		// List<MemberPackage> list = new ArrayList<>();
 		List<LanuageTariff> lan = lanuageTariffBean.findAll();
 		if (lan != null) {
 			req.put("fee_list", lan);
@@ -176,7 +189,6 @@ public class MemberPackageRESTService {
 		Map<String, Object> req = new HashMap<>();
 		JSONObject obj = JSONObject.parseObject(params);
 		String version = Objects.toString(obj.getString("version"), "0");
-		
 
 		if (!version.equals(keyPro.getProperty("version"))) {
 			req.put("version", keyPro.getProperty("version"));
@@ -194,7 +206,7 @@ public class MemberPackageRESTService {
 		}
 		return req;
 	}
-	
+
 	/**
 	 * 查询用户订购列表
 	 * 
@@ -211,7 +223,7 @@ public class MemberPackageRESTService {
 		String uid = Objects.toString(obj.getString("uno"), "0");
 
 		List<MemberOrder> list = memberOrderBean.findByUid(uid);
-		if (list != null&&list.size()>0) {
+		if (list != null && list.size() > 0) {
 			req.put("orders", list);
 			req.put("count", list.size());
 			req.put("result", "success");
@@ -224,7 +236,7 @@ public class MemberPackageRESTService {
 		}
 		return req;
 	}
-	
+
 	/**
 	 * 查询用户待支付订单
 	 * 
@@ -241,7 +253,7 @@ public class MemberPackageRESTService {
 		String uid = Objects.toString(obj.getString("uno"), "0");
 
 		List<MemberOrder> list = memberOrderBean.findNoPayByUid(uid);
-		if (list != null&&list.size()>0) {
+		if (list != null && list.size() > 0) {
 			req.put("orders", list);
 			req.put("count", list.size());
 			req.put("result", "success");
@@ -254,7 +266,7 @@ public class MemberPackageRESTService {
 		}
 		return req;
 	}
-	
+
 	/**
 	 * 查询用户全部服务
 	 * 
@@ -266,47 +278,48 @@ public class MemberPackageRESTService {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Map<String, Object> userAllService(String params) {
-		
+
 		Map<String, Object> req = new HashMap<>();
 		JSONObject obj = JSONObject.parseObject(params);
 		String uid = Objects.toString(obj.getString("uno"), "0");
-
 		List<MemberOrder> list = memberOrderBean.findUsingOrderByUno(uid, "3");
-		if (list != null&&list.size()>0) {
+		if (list != null && list.size() > 0) {
 			List<BaseProduct> bps = baseProductBean.findAll();
-			Map<String,BaseProduct> bpMap = new HashMap<String,BaseProduct>();
+			Map<String, BaseProduct> bpMap = new HashMap<String, BaseProduct>();
 			for (BaseProduct baseProduct : bps) {
 				bpMap.put(baseProduct.getProductNo(), baseProduct);
 			}
-			List<Map<String,Object>> life = new LinkedList<Map<String,Object>>();
-			List<Map<String,Object>> hurry = new LinkedList<Map<String,Object>>();
-			Map<String,Integer> resultMap = new HashMap<String,Integer>();
+			List<Map<String, Object>> life = new LinkedList<Map<String, Object>>();
+			List<Map<String, Object>> hurry = new LinkedList<Map<String, Object>>();
+			Map<String, Integer> resultMap = new HashMap<String, Integer>();
 			for (MemberOrder memberOrder : list) {
-				List<MemberOrderUse> useList = memberOrderUseBean.findByOrderNo(memberOrder.getOrderNo());
+				List<MemberOrderUse> useList = memberOrderUseBean
+						.findByOrderNo(memberOrder.getOrderNo());
 				for (MemberOrderUse memberOrderUse : useList) {
 					String pNo = memberOrderUse.getProductNo();
 					int times = memberOrderUse.getTimes();
-					if(resultMap.containsKey(pNo)){
-						times = resultMap.get(memberOrderUse.getProductNo()) + times;
+					if (resultMap.containsKey(pNo)) {
+						times = resultMap.get(memberOrderUse.getProductNo())
+								+ times;
 					}
-					resultMap.put(pNo,times);
+					resultMap.put(pNo, times);
 				}
 			}
-			
+
 			for (String pNo : resultMap.keySet()) {
 				BaseProduct bp = bpMap.get(pNo);
-				Map<String,Object> pkgMap = new HashMap<String,Object>();
+				Map<String, Object> pkgMap = new HashMap<String, Object>();
 				pkgMap.put("productNo", pNo);
 				pkgMap.put("productName", bp.getProductName());
 				pkgMap.put("serviceType", bp.getServiceType());
 				pkgMap.put("times", resultMap.get(pNo));
-				if("生活类".equals(bp.getServiceType())){
+				if ("生活类".equals(bp.getServiceType())) {
 					life.add(pkgMap);
-				}else if("应急类".equals(bp.getServiceType())){
+				} else if ("应急类".equals(bp.getServiceType())) {
 					hurry.add(pkgMap);
 				}
 			}
-			
+
 			req.put("life", life);
 			req.put("lifeCount", life.size());
 			req.put("hurry", hurry);
@@ -322,7 +335,7 @@ public class MemberPackageRESTService {
 		}
 		return req;
 	}
-	
+
 	/**
 	 * 取消用户待支付订单
 	 * 
@@ -336,21 +349,21 @@ public class MemberPackageRESTService {
 	public Map<String, Object> cancelUserOrder(String params) {
 		Map<String, Object> req = new HashMap<>();
 		JSONObject obj = JSONObject.parseObject(params);
-		String orderNo = Objects.toString(obj.getString("orderNo"),"0");
+		String orderNo = Objects.toString(obj.getString("orderNo"), "0");
 		MemberOrder order = memberOrderBean.findByOrderNo(orderNo);
-		if(order!=null){
+		if (order != null) {
 			memberOrderBean.remove(order);
 			req.put("result", "success");
 			req.put("error_code", "000000");
 			req.put("error_msg", "");
-		}else{
+		} else {
 			req.put("result", "fail");
 			req.put("error_code", "20001");
 			req.put("error_msg", "无此订单信息");
 		}
 		return req;
 	}
-	
+
 	/**
 	 * 查询产品列表
 	 * 
@@ -410,7 +423,7 @@ public class MemberPackageRESTService {
 		}
 		return req;
 	}
-	
+
 	/**
 	 * 查询套餐详情列表
 	 * 
@@ -426,13 +439,15 @@ public class MemberPackageRESTService {
 		JSONObject obj = JSONObject.parseObject(params);
 		String packageNo = Objects.toString(obj.getString("packageNo"), "0");
 
-		List<PackageProductContent> pack = packageProductContentBean.findByPackageNo(packageNo);
+		List<PackageProductContent> pack = packageProductContentBean
+				.findByPackageNo(packageNo);
 		if (pack != null) {
-			List<Map<String,Object>> packageProduct = new LinkedList<Map<String,Object>>();
+			List<Map<String, Object>> packageProduct = new LinkedList<Map<String, Object>>();
 			for (PackageProductContent packageProductContent : pack) {
-				BaseProduct bp = baseProductBean.findByProductNo(packageProductContent.getProductNo());
-				if(bp!=null){
-					Map<String,Object> ppMap = new HashMap<String,Object>();
+				BaseProduct bp = baseProductBean
+						.findByProductNo(packageProductContent.getProductNo());
+				if (bp != null) {
+					Map<String, Object> ppMap = new HashMap<String, Object>();
 					ppMap.put("type", packageProductContent.getType());
 					ppMap.put("times", packageProductContent.getTimes());
 					ppMap.put("productNo", bp.getProductNo());
@@ -444,7 +459,7 @@ public class MemberPackageRESTService {
 					packageProduct.add(ppMap);
 				}
 			}
-		
+
 			req.put("count", Objects.toString(pack.size(), "0"));
 			req.put("baseProducts", packageProduct);
 			req.put("result", "success");
@@ -457,7 +472,7 @@ public class MemberPackageRESTService {
 		}
 		return req;
 	}
-	
+
 	/**
 	 * 查询套餐列表
 	 * 
@@ -473,9 +488,10 @@ public class MemberPackageRESTService {
 		JSONObject obj = JSONObject.parseObject(params);
 		String type = Objects.toString(obj.getString("package_type"), "0");
 
-//		List<PackageProduct> pack = packageProductBean.findByPackageType(type);
+		// List<PackageProduct> pack =
+		// packageProductBean.findByPackageType(type);
 		List<PackageProduct> pack = packageProductBean.findAll();
-		if (pack != null&&pack.size()>0) {
+		if (pack != null && pack.size() > 0) {
 			req.put("count", Objects.toString(pack.size(), "0"));
 			req.put("packages", pack);
 			req.put("result", "success");
@@ -488,7 +504,7 @@ public class MemberPackageRESTService {
 		}
 		return req;
 	}
-	
+
 	/**
 	 * 查询套餐列表
 	 * 
@@ -502,12 +518,13 @@ public class MemberPackageRESTService {
 	public Map<String, Object> packageProducts(String params) {
 		Map<String, Object> req = new HashMap<>();
 		JSONObject obj = JSONObject.parseObject(params);
-		
+
 		String type = Objects.toString(obj.getString("package_type"), "0");
 
-//		List<PackageProduct> pack = packageProductBean.findByPackageType(type);
+		// List<PackageProduct> pack =
+		// packageProductBean.findByPackageType(type);
 		List<PackageProduct> pack = packageProductBean.findAll();
-		if (pack != null&&pack.size()>0) {
+		if (pack != null && pack.size() > 0) {
 			req.put("count", Objects.toString(pack.size(), "0"));
 			req.put("packages", pack);
 			req.put("result", "success");
@@ -520,7 +537,7 @@ public class MemberPackageRESTService {
 		}
 		return req;
 	}
-	
+
 	/**
 	 * 用户余额支付
 	 * 
@@ -553,7 +570,8 @@ public class MemberPackageRESTService {
 					ord.setState(OrderStatus.PAY_SUCCESS);
 					orderBean.updateOrder(ord);
 
-					Product product = productBean.findByProductNo(ord.getProdId());
+					Product product = productBean.findByProductNo(ord
+							.getProdId());
 					MemberPackage mp = memberPackageBean.findMemberPackage(uno,
 							ord.getLanguages().toString());
 					if (mp != null) {
@@ -648,7 +666,8 @@ public class MemberPackageRESTService {
 					orderBean.updateOrder(ord);
 					req.put("state", ord.getState());
 
-					Product product = productBean.findByProductNo(ord.getProdId());
+					Product product = productBean.findByProductNo(ord
+							.getProdId());
 					if ("1".equals(product.getType())) {
 						account.setAccountBalance(account.getAccountBalance()
 								.add(product.getDenomination()));
@@ -722,13 +741,13 @@ public class MemberPackageRESTService {
 			try {
 				accessToken = tokenCredential.getAccessToken();
 				payment = Payment.get(accessToken, order_no);
-				if("approved".equals(payment.getState()))
-				{
+				if ("approved".equals(payment.getState())) {
 					ord.setState(OrderStatus.PAY_SUCCESS);
 					orderBean.updateOrder(ord);
 					req.put("state", ord.getState());
 
-					Product product = productBean.findByProductNo(ord.getProdId());
+					Product product = productBean.findByProductNo(ord
+							.getProdId());
 					if ("1".equals(product.getType())) {
 						account.setAccountBalance(account.getAccountBalance()
 								.add(product.getDenomination()));
@@ -780,14 +799,12 @@ public class MemberPackageRESTService {
 						req.put("error_code", "000000");
 						req.put("error_msg", "");
 					}
-				}
-				else
-				{
+				} else {
 					req.put("result", "fail");
 					req.put("error_code", "3013");
 					req.put("error_msg", "支付未成功");
 				}
-				
+
 			} catch (PayPalRESTException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -874,4 +891,116 @@ public class MemberPackageRESTService {
 
 	}
 
+	/**
+	 * 邀请码优惠查询(单条数据)
+	 * 
+	 * @param params
+	 * @return
+	 */
+	@POST
+	@Path("/invitationCode")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> invitationCode(String params) {
+		Map<String, Object> req = new HashMap<>();
+		JSONObject obj = JSONObject.parseObject(params);
+		String uid = Objects.toString(obj.getString("code"), "0");
+		List<PartnerCode> list = partnercodebean.findByUid(uid);
+		if (list != null && list.size() > 0) {
+			req.put("orders", list.get(0));
+			req.put("count", list.size());
+			req.put("result", "success");
+			req.put("error_code", "000000");
+			req.put("error_msg", "");
+		} else {
+			req.put("result", "fail");
+			req.put("error_code", "20001");
+			req.put("error_msg", "查无信息");
+		}
+		return req;
+	}
+
+	/**
+	 * 邀请码优惠查询(全部)
+	 * 
+	 * @param params
+	 * @return
+	 */
+	@POST
+	@Path("/invitationCodeAll")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> invitationCodeAll(String params) {
+		Map<String, Object> req = new HashMap<>();
+		JSONObject obj = JSONObject.parseObject(params);
+		String uid = Objects.toString(obj.getString("code"), "0");
+		List<PartnerCode> list = partnercodebean.findAll();
+		if (list != null && list.size() > 0) {
+			req.put("orders", list);
+			req.put("count", list.size());
+			req.put("result", "success");
+			req.put("error_code", "000000");
+			req.put("error_msg", "");
+		} else {
+			req.put("result", "fail");
+			req.put("error_code", "20001");
+			req.put("error_msg", "查无信息");
+		}
+		return req;
+
+	}
+	
+	/**
+	 * 优惠率接口
+	 */
+	@POST
+	@Path("/preferentia")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> preferentia(String params) {
+		Map<String, Object> req = new HashMap<>();
+		JSONObject obj = JSONObject.parseObject(params);
+		String code = Objects.toString(obj.getString("code"), "0");// 传用户名 还是code码
+
+
+	//	List<Preferential> list = preferentialbean.findByUid(code);//优惠表
+		//根据邀请码过期时间判断 是否有效
+		List<PartnerCode> partnercodelist = partnercodebean.findByUid(code);
+		Date serviceStartTime = partnercodelist.get(0).getServiceStartTime();//开始时间16.1.5  1.6
+		Date serviceEndTime = partnercodelist.get(0).getServiceEndTime();//结束时间
+		Date date=new Date();
+		SimpleDateFormat format=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA);
+		String time = format.format(date);
+		Date d = null;
+		try {
+			d = format.parse(time);
+			
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		if (serviceStartTime.after(d) != true) {// 邀请码 开始时间
+			if (serviceEndTime.before(d) != true) { // 邀请码结束时间
+				System.out.println("结束时间和系统时间的对比" + d.before(serviceEndTime)
+						+ "结束时间" + serviceEndTime + "系统时间" + time);
+				String saleStrategyNo = partnercodelist.get(0).getSaleStrategyNo();//得到邀请码表数据（优惠策略标识）
+				List<Preferential> Preferentiallist = preferentialbean.findByUid(saleStrategyNo);//查询优惠表
+				BigDecimal preferential = Preferentiallist.get(0).getPreferential();
+				req.put("orders", preferential);
+				req.put("count", Preferentiallist.size());
+				req.put("result", "success");
+				req.put("error_code", "000000"); 
+				req.put("error_msg", "");
+			}else {
+				req.put("result", "fail");
+				req.put("error_code", "20001");
+				req.put("error_msg", "邀请码已过期");
+			}
+		}else {
+			req.put("result", "fail");
+			req.put("error_code", "20001");
+			req.put("error_msg", "邀请码未到激活时间");
+		}
+		return req;
+	}
+		
 }

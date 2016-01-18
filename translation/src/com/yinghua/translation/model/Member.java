@@ -99,7 +99,8 @@ public class Member implements Serializable
 	private String localLang; // local_lang 所在国家语言
 	@Column(name = "contacts")
 	private String contacts; // 手机通信录
-
+	@Column(name = "code")
+	private String code; // 邀请码
 	public Member()
 	{}
 
@@ -400,6 +401,18 @@ public class Member implements Serializable
 
 	public void setVoip(String voip) {
 		this.voip = voip;
+	}
+
+	public String getCode() {
+		return code;
+	}
+
+	public void setCode(String code) {
+		this.code = code;
+	}
+
+	public static long getSerialversionuid() {
+		return serialVersionUID;
 	}
 	
 	

@@ -51,6 +51,7 @@ import com.yinghua.translation.model.Account;
 import com.yinghua.translation.model.Member;
 import com.yinghua.translation.model.MemberOrder;
 import com.yinghua.translation.model.MemberPackage;
+import com.yinghua.translation.model.PartnerCode;
 import com.yinghua.translation.model.ThirdMember;
 import com.yinghua.translation.model.enumeration.Gender;
 import com.yinghua.translation.model.enumeration.LoginType;
@@ -65,6 +66,7 @@ import com.yinghua.translation.service.AccountBean;
 import com.yinghua.translation.service.MemberBean;
 import com.yinghua.translation.service.MemberOrderBean;
 import com.yinghua.translation.service.MemberPackageBean;
+import com.yinghua.translation.service.PartnerCodeBean;
 import com.yinghua.translation.service.ThirdMemberBean;
 import com.yinghua.translation.util.ClassLoaderUtil;
 import com.yinghua.translation.util.HttpRequester;
@@ -99,6 +101,8 @@ public class MemberResourceRESTService
 	
 	@Inject
 	private HttpRequester httpRequester;
+	@EJB
+	private PartnerCodeBean partnercodebean;
 
 	// private static final String key = "p5tvi9dst3wi4";
 	// private static final String secret = "9jcy7Nbq3OU0YB";
@@ -325,6 +329,7 @@ public class MemberResourceRESTService
 			JSONObject obj = JSONObject.parseObject(params);
 			
 			String code = this.prop.getProperty(obj.getString("mobile"));
+			
 			if (Objects.toString(obj.getString("verify_code"), "0").equals(
 					code))
 			{
@@ -347,8 +352,17 @@ public class MemberResourceRESTService
 					member.setMemberType(MemberType.ORDINARY);
 					member.setMemberNumber(UUIDUtil.genUUIDString());
 					member.setVoip(Constant.UUCALL_GROUP+obj.getString("mobile"));
+					//查询邀请码
+					String yqmcode = Objects.toString(obj.getString("code"), "2");
+					List<PartnerCode> list = partnercodebean.findByUid(yqmcode);
+					if (list != null && list.size() > 0) {
+						member.setCode(list.get(0).getCode()); //保存邀请码到member表
+					} else {
+						req.put("result", "fail");
+						req.put("error_code", "20001");
+						req.put("error_msg", "邀请码查无信息");
+					}
 					Long id = repository.register(member);
-	
 					Account account = new Account();
 					account.setAccountBalance(BigDecimal.ZERO);
 					account.setAccountNumber(member.getMobilePhone());
@@ -359,7 +373,6 @@ public class MemberResourceRESTService
 					account.setSurplusCallDuration(36000);
 					account.setStatus(MemberStatus.NORMAL);
 					accountBean.register(account);
-					
 					MemberOrder mo = new MemberOrder();
 					mo.setMemberNumber(member.getMemberNumber());
 					mo.setOrderNo(OrderNoUtil.getOrderNo("OR"));
