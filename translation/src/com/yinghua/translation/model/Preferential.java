@@ -21,6 +21,8 @@ public class Preferential  implements Serializable {
 	private String salestrategyno; //优惠策略标识
 	@Column(name = "preferential")
 	private BigDecimal preferential; // 优惠力度
+	@Column(name = "describe")
+	private String describe; // 优惠描述
 	public Long getId() {
 		return id;
 	}
@@ -42,5 +44,12 @@ public class Preferential  implements Serializable {
 	public void setSalestrategyno(String salestrategyno) {
 		this.salestrategyno = salestrategyno;
 	}
+	public String getDescribe() {
+		return describe;
+	}
+	public void setDescribe(String describe) {
+		this.describe = describe;
+	}
+	
 	
 }

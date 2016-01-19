@@ -170,5 +170,21 @@ public class MemberBean extends AbstractFacade<Member>
 			return (Member) query.getSingleResult();
 		}
 	}
+	public Member findByMemberMobileNo(String mno)
+	{
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<Member> criteria = cb.createQuery(Member.class);
+		Root<Member> member = criteria.from(Member.class);
+		criteria.select(member).where(cb.equal(member.get("mobilePhone"), mno));
+		Query query = em.createQuery(criteria);
+		if (query.getResultList().size() == 0)
+		{
+			return null;
+		}
+		else
+		{
+			return (Member) query.getSingleResult();
+		}
+	}
 	
 }

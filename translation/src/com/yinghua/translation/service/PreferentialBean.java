@@ -5,12 +5,14 @@ import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
 import org.apache.log4j.Logger;
 
+import com.yinghua.translation.model.PartnerCode;
 import com.yinghua.translation.model.Preferential;
 @Stateless
 public class PreferentialBean extends AbstractFacade<Preferential> {
@@ -62,6 +64,21 @@ public class PreferentialBean extends AbstractFacade<Preferential> {
 		return em.createQuery(criteria).getResultList();
 	}
 
-	
+	public Preferential findByPreferentialNo(String Preferential)
+	{
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<Preferential> criteria = cb.createQuery(Preferential.class);
+		Root<Preferential> partnercode = criteria.from(Preferential.class);
+		criteria.select(partnercode).where(cb.equal(partnercode.get("salestrategyno"), Preferential));
+		Query query = em.createQuery(criteria);
+		if (query.getResultList().size() == 0)
+		{
+			return null;
+		}
+		else
+		{
+			return (Preferential) query.getSingleResult();
+		}
+	}
 
 }

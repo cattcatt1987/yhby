@@ -5,12 +5,14 @@ import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
 import org.apache.log4j.Logger;
 
+import com.yinghua.translation.model.Member;
 import com.yinghua.translation.model.PartnerCode;
 
 @Stateless
@@ -62,5 +64,23 @@ public class PartnerCodeBean extends AbstractFacade<PartnerCode> {
 				cb.equal(partnercode.get("code"), code));
 		return em.createQuery(criteria).getResultList();
 	}
+	
+	public PartnerCode findByPartnerCodeNo(String partnerCode)
+	{
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<PartnerCode> criteria = cb.createQuery(PartnerCode.class);
+		Root<PartnerCode> partnercode = criteria.from(PartnerCode.class);
+		criteria.select(partnercode).where(cb.equal(partnercode.get("code"), partnerCode));
+		Query query = em.createQuery(criteria);
+		if (query.getResultList().size() == 0)
+		{
+			return null;
+		}
+		else
+		{
+			return (PartnerCode) query.getSingleResult();
+		}
+	}
+
 
 }

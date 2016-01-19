@@ -49,6 +49,7 @@ import com.paypal.base.rest.PayPalRESTException;
 import com.yinghua.translation.model.Account;
 import com.yinghua.translation.model.BaseProduct;
 import com.yinghua.translation.model.LanuageTariff;
+import com.yinghua.translation.model.Member;
 import com.yinghua.translation.model.MemberOrder;
 import com.yinghua.translation.model.MemberOrderUse;
 import com.yinghua.translation.model.MemberPackage;
@@ -949,7 +950,7 @@ public class MemberPackageRESTService {
 		return req;
 
 	}
-	
+
 	/**
 	 * 优惠率接口
 	 */
@@ -960,47 +961,82 @@ public class MemberPackageRESTService {
 	public Map<String, Object> preferentia(String params) {
 		Map<String, Object> req = new HashMap<>();
 		JSONObject obj = JSONObject.parseObject(params);
-		String code = Objects.toString(obj.getString("code"), "0");// 传用户名 还是code码
+		String mobile = Objects.toString(obj.getString("uno"), "0");// 传用户名
+		// 先查询member表 查出来邀请码再说下一步
+		Member findByMemberNo = memberbean.findByMemberNo(mobile);
+		if (findByMemberNo != null) {
+			String code = findByMemberNo.getCode();
+			// 根据邀请码过期时间判断 是否有效
+			if (code != null && !code.equals("")) {
+				List<PartnerCode> partnercodelist = partnercodebean
+						.findByUid(code);
+				if (partnercodelist != null) {
+					Date serviceStartTime = partnercodelist.get(0)
+							.getServiceStartTime();// 开始时间
+					Date serviceEndTime = partnercodelist.get(0)
+							.getServiceEndTime();// 结束时间
+					Date date = new Date();
+					SimpleDateFormat format = new SimpleDateFormat(
+							"yyyy-MM-dd HH:mm:ss", Locale.CHINA);
+					String time = format.format(date);
+					Date d = null;
+					try {
+						d = format.parse(time);
 
+					} catch (ParseException e) {
+						e.printStackTrace();
+					}
+					if (serviceStartTime.after(d) != true) {// 邀请码 开始时间
+						if (serviceEndTime.before(d) != true) { // 邀请码结束时间
 
-	//	List<Preferential> list = preferentialbean.findByUid(code);//优惠表
-		//根据邀请码过期时间判断 是否有效
-		List<PartnerCode> partnercodelist = partnercodebean.findByUid(code);
-		Date serviceStartTime = partnercodelist.get(0).getServiceStartTime();//开始时间16.1.5  1.6
-		Date serviceEndTime = partnercodelist.get(0).getServiceEndTime();//结束时间
-		Date date=new Date();
-		SimpleDateFormat format=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA);
-		String time = format.format(date);
-		Date d = null;
-		try {
-			d = format.parse(time);
-			
-		} catch (ParseException e) {
-			e.printStackTrace();
-		}
-		if (serviceStartTime.after(d) != true) {// 邀请码 开始时间
-			if (serviceEndTime.before(d) != true) { // 邀请码结束时间
-				System.out.println("结束时间和系统时间的对比" + d.before(serviceEndTime)
-						+ "结束时间" + serviceEndTime + "系统时间" + time);
-				String saleStrategyNo = partnercodelist.get(0).getSaleStrategyNo();//得到邀请码表数据（优惠策略标识）
-				List<Preferential> Preferentiallist = preferentialbean.findByUid(saleStrategyNo);//查询优惠表
-				BigDecimal preferential = Preferentiallist.get(0).getPreferential();
-				req.put("orders", preferential);
-				req.put("count", Preferentiallist.size());
+							String saleStrategyNo = partnercodelist.get(0)
+									.getSaleStrategyNo();// 得到邀请码表数据（优惠策略标识）
+							Preferential findByPreferentialNo = preferentialbean
+									.findByPreferentialNo(saleStrategyNo);// 查询优惠表
+							BigDecimal preferential = findByPreferentialNo
+									.getPreferential();// 优惠参数
+							String describe = findByPreferentialNo
+									.getDescribe();//优惠描述
+							req.put("preferential", preferential);
+							req.put("describe", describe);//优惠描述
+							req.put("result", "success");
+							req.put("error_code", "000000");
+							req.put("error_msg", "");
+						} else {
+							req.put("result", "success");
+							req.put("preferential", 1);
+							req.put("error_code", "000000");
+							req.put("error_msg", "");
+							// req.put("error_code", "20001");
+							// req.put("error_msg", "邀请码已过期");
+						}
+					} else {
+						req.put("result", "success");
+						req.put("preferential", 1);
+						req.put("error_code", "000000");
+						req.put("error_msg", "");
+						// req.put("error_code", "20001");
+						// req.put("error_msg", "邀请码未到激活时间");
+					}
+				}
+			} else {
 				req.put("result", "success");
-				req.put("error_code", "000000"); 
+				req.put("preferential", 1);
+				req.put("error_code", "000000");
 				req.put("error_msg", "");
-			}else {
-				req.put("result", "fail");
-				req.put("error_code", "20001");
-				req.put("error_msg", "邀请码已过期");
+				// req.put("error_code", "20001");
+				// req.put("error_msg", "查无邀请码");
 			}
-		}else {
-			req.put("result", "fail");
-			req.put("error_code", "20001");
-			req.put("error_msg", "邀请码未到激活时间");
+		} else {
+			req.put("result", "success");
+			req.put("preferential", 1);
+			req.put("error_code", "000000");
+			req.put("error_msg", "");
+			// req.put("error_code", "20001");
+			// req.put("error_msg", "");
 		}
+
 		return req;
 	}
-		
+
 }
