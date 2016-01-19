@@ -43,7 +43,7 @@ public class MemberOrder implements java.io.Serializable
 	@Column(name = "package_desc")
 	private String packageDesc; // package_desc 套餐描述
 	@Column(name = "order_time")
-	@Temporal(TemporalType.DATE)
+	@Temporal(TemporalType.TIMESTAMP)
 	private Date orderTime; // order_time 下单时间
 	@Column(name = "surplus_call_duration")
 	private Integer surplusCallDuration; // surplus_call_duration 剩余通话时长

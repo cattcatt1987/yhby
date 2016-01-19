@@ -109,6 +109,8 @@ public class MemberResourceRESTService {
 	private Properties prop = ClassLoaderUtil.getProperties("cache.properties");
 	private Properties keyPro = ClassLoaderUtil.getProperties("key.properties");
 
+	private final static String APIKEY = "3f348a94ce3cb676c2ce3f628b85b065";
+	
 	/**
 	 * 查询所有用户信息
 	 * 
@@ -147,49 +149,62 @@ public class MemberResourceRESTService {
 	@Path("/getVeriyCode")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Map<String, Object> getVeriyCode(String params) {
+	public Map<String, Object> getVeriyCode(String params)
+	{
 		Map<String, Object> req = new HashMap<>();
 		JSONObject obj = JSONObject.parseObject(params);
 		String code = RandomNum.getStringNum(4);
 		Map<String, String> param = new HashMap<>();
 
-		// if ("1".equals(Objects.toString(obj.getString("type"), "null")))
-		// {
-		// Member member = repository.findByMobile(obj.getString("mobile"));
-		// if (member != null)
-		// {
-		// // 返回用户已注册
-		// req.put("result", "fail");
-		// req.put("error_code", "3001");
-		// req.put("error_msg", "手机号已注册");
-		// return req;
-		// }
-		// }
-		param.put("account", "novobabel");
-		param.put("password", "novobabel1");
+//		if ("1".equals(Objects.toString(obj.getString("type"), "null")))
+//		{
+//			Member member = repository.findByMobile(obj.getString("mobile"));
+//			if (member != null)
+//			{
+//				// 返回用户已注册
+//				req.put("result", "fail");
+//				req.put("error_code", "3001");
+//				req.put("error_msg", "手机号已注册");
+//				return req;
+//			}
+//		}
+//		param.put("account", "novobabel");
+//		param.put("password", "novobabel1");
+		param.put("apikey", APIKEY);
 		param.put("mobile", obj.getString("mobile"));
 
-		try {
-			param.put("content", URLEncoder.encode("您的验证码是：" + code
-					+ "。如需帮助请联系客服。", "UTF-8"));
+		try
+		{
+//			param.put("content", URLEncoder.encode("您的验证码是：" + code
+//					+ "。如需帮助请联系客服。", "UTF-8"));
+			param.put("text", URLEncoder.encode("【语道APP】激活码是" + code
+					+ "。如非本人操作，请致电010-88849100。", "UTF-8"));
 			// HttpRespons hr = httpRequester.sendPost(
 			// "http://www.106jiekou.com/webservice/sms.asmx/Submit",
 			// param);
+//			HttpRespons hr = httpRequester.sendPost(
+//					"http://sms.106jiekou.com/utf8/sms.aspx?", param);
 			HttpRespons hr = httpRequester.sendPost(
-					"http://sms.106jiekou.com/utf8/sms.aspx?", param);
-			// JSONObject res = JSONObject.parseObject(hr.getContent());
-			if (hr.getContent().toString().equals("100")) {
+					"https://sms.yunpian.com/v1/sms/send.json", param);
+			 JSONObject res = JSONObject.parseObject(hr.getContent());
+//			if (hr.getContent().toString().equals("100"))
+			if("0".equals(res.getString("code")))
+			{
 				PropertiesUtil.writeProperties(obj.getString("mobile"), code);
 				req.put("result", "success");
 				req.put("error_code", "000000");
 				req.put("error_msg", "");
-			} else {
+			}
+			else
+			{
 				// 验证码发送失败
 				req.put("result", "fail");
 				req.put("error_code", "4002");
 				req.put("error_msg", "短信发送失败");
 			}
-		} catch (IOException e) {
+		}
+		catch (IOException e)
+		{
 			log.info(e.getMessage());
 			req.put("result", "fail");
 			req.put("error_code", "4002");
@@ -305,7 +320,6 @@ public class MemberResourceRESTService {
 			JSONObject obj = JSONObject.parseObject(params);
 
 			String code = this.prop.getProperty(obj.getString("mobile"));
-		code = "18811044429";
 			if (Objects.toString(obj.getString("verify_code"), "0")
 					.equals(code)) {
 				Member member = repository
