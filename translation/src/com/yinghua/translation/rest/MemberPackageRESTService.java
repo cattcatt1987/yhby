@@ -21,12 +21,14 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
@@ -283,30 +285,61 @@ public class MemberPackageRESTService {
 		Map<String, Object> req = new HashMap<>();
 		JSONObject obj = JSONObject.parseObject(params);
 		String uid = Objects.toString(obj.getString("uno"), "0");
+		List<MemberOrder> list3 = memberOrderBean.findUsingOrderByUno(uid, "1");
 		List<MemberOrder> list = memberOrderBean.findUsingOrderByUno(uid, "3");
-		if (list != null && list.size() > 0) {
+		List<MemberOrder> list2 = memberOrderBean.findUsingOrderByUno(uid, "2");
+		if(list!=null){
+			if(list2!=null&&list2.size()>0){
+				list.addAll(list2);
+			}
+		}else{
+			if(list2!=null&&list2.size()>0){
+				list=list2;
+			}
+		}
+		
+		if(list!=null||list3!=null){
+			List<Map<String, Object>> life = new LinkedList<Map<String, Object>>();
+			List<Map<String, Object>> hurry = new LinkedList<Map<String, Object>>();
+			Map<String, Integer> resultMap = new HashMap<String, Integer>();
+			Date serviceEndTime = null;
 			List<BaseProduct> bps = baseProductBean.findAll();
 			Map<String, BaseProduct> bpMap = new HashMap<String, BaseProduct>();
 			for (BaseProduct baseProduct : bps) {
 				bpMap.put(baseProduct.getProductNo(), baseProduct);
 			}
-			List<Map<String, Object>> life = new LinkedList<Map<String, Object>>();
-			List<Map<String, Object>> hurry = new LinkedList<Map<String, Object>>();
-			Map<String, Integer> resultMap = new HashMap<String, Integer>();
-			for (MemberOrder memberOrder : list) {
-				List<MemberOrderUse> useList = memberOrderUseBean
-						.findByOrderNo(memberOrder.getOrderNo());
-				for (MemberOrderUse memberOrderUse : useList) {
-					String pNo = memberOrderUse.getProductNo();
-					int times = memberOrderUse.getTimes();
-					if (resultMap.containsKey(pNo)) {
-						times = resultMap.get(memberOrderUse.getProductNo())
-								+ times;
+			if(list3!=null&&list3.size()>0){
+				serviceEndTime = list3.get(0).getServiceEndTime();
+				for (MemberOrder memberOrder : list3) {
+					List<MemberOrderUse> useList = memberOrderUseBean
+							.findByOrderNo(memberOrder.getOrderNo());
+					for (MemberOrderUse memberOrderUse : useList) {
+						resultMap.put(memberOrderUse.getProductNo(), 999);
 					}
-					resultMap.put(pNo, times);
 				}
 			}
-
+			
+			if(list!=null&&list.size()>0){
+				serviceEndTime = list.get(0).getServiceEndTime();
+				for (MemberOrder memberOrder : list) {
+					List<MemberOrderUse> useList = memberOrderUseBean
+							.findByOrderNo(memberOrder.getOrderNo());
+					for (MemberOrderUse memberOrderUse : useList) {
+						String pNo = memberOrderUse.getProductNo();
+						int times = memberOrderUse.getTimes();
+						if (resultMap.containsKey(pNo)) {
+							if(resultMap.get(memberOrderUse.getProductNo())!=999){
+								times = resultMap.get(memberOrderUse.getProductNo())
+										+ times;
+							}else{
+								times = resultMap.get(memberOrderUse.getProductNo());
+							}
+						}
+						resultMap.put(pNo, times);
+					}
+				}
+			}
+			
 			for (String pNo : resultMap.keySet()) {
 				BaseProduct bp = bpMap.get(pNo);
 				Map<String, Object> pkgMap = new HashMap<String, Object>();
@@ -325,7 +358,7 @@ public class MemberPackageRESTService {
 			req.put("lifeCount", life.size());
 			req.put("hurry", hurry);
 			req.put("hurryCount", hurry.size());
-			req.put("seviceEndTime", list.get(0).getServiceEndTime());
+			req.put("seviceEndTime", serviceEndTime);
 			req.put("result", "success");
 			req.put("error_code", "000000");
 			req.put("error_msg", "");
@@ -334,6 +367,7 @@ public class MemberPackageRESTService {
 			req.put("error_code", "20001");
 			req.put("error_msg", "查无信息");
 		}
+		
 		return req;
 	}
 

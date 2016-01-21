@@ -51,6 +51,7 @@ import com.yinghua.translation.model.Account;
 import com.yinghua.translation.model.Member;
 import com.yinghua.translation.model.MemberOrder;
 import com.yinghua.translation.model.MemberPackage;
+import com.yinghua.translation.model.PackageProductContent;
 import com.yinghua.translation.model.PartnerCode;
 import com.yinghua.translation.model.ThirdMember;
 import com.yinghua.translation.model.enumeration.Gender;
@@ -1194,5 +1195,5 @@ public class MemberResourceRESTService {
 		// param);
 
 	}
-
+	
 }

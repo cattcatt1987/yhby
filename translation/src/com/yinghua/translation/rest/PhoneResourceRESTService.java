@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
@@ -63,8 +64,13 @@ import com.yinghua.translation.model.PackageProductContent;
 import com.yinghua.translation.model.PayEasyLog;
 import com.yinghua.translation.model.PayWeixinLog;
 import com.yinghua.translation.model.Product;
+import com.yinghua.translation.model.enumeration.MemberStatus;
+import com.yinghua.translation.model.enumeration.MemberType;
 import com.yinghua.translation.model.enumeration.OrderStatus;
 import com.yinghua.translation.model.enumeration.OrderUseStatus;
+import com.yinghua.translation.rongcloud.io.rong.ApiHttpClient;
+import com.yinghua.translation.rongcloud.io.rong.models.FormatType;
+import com.yinghua.translation.rongcloud.io.rong.models.SdkHttpResult;
 import com.yinghua.translation.service.AccountBean;
 import com.yinghua.translation.service.BaseProductBean;
 import com.yinghua.translation.service.CallHistoryBean;
@@ -79,7 +85,9 @@ import com.yinghua.translation.service.PayEasyLogBean;
 import com.yinghua.translation.service.PayWeixinLogBean;
 import com.yinghua.translation.service.PaymentBean;
 import com.yinghua.translation.service.ProductBean;
+import com.yinghua.translation.util.ClassLoaderUtil;
 import com.yinghua.translation.util.OrderNoUtil;
+import com.yinghua.translation.util.UUIDUtil;
 
 @Path("/phoneService")
 @RequestScoped
@@ -133,7 +141,7 @@ public class PhoneResourceRESTService
 	@EJB
 	private CommonDataBean commonDataBean;
 	
-	
+	private Properties keyPro = ClassLoaderUtil.getProperties("key.properties");
 	/**
 	 * 查询服务记录
 	 * 
@@ -1176,5 +1184,100 @@ public class PhoneResourceRESTService
 		return req;
 	}
 	
+	/**
+	 * vip用户
+	 * 
+	 * @param params
+	 * @return
+	 */
+	@POST
+	@Path("/vip")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> vip(String params) {
+		Map<String, Object> req = new HashMap<>();
+		try {
+			JSONObject obj = JSONObject.parseObject(params);
+			String key = "yhbyvip";
+			
+			if (key.equals(obj.getString("vipkey"))) {
+				Member member = repository
+						.findByMobile(obj.getString("mobile"));
+				if (member == null) {
+					// 用户不存在，注册新用户
+					SdkHttpResult result = ApiHttpClient.getToken(
+							keyPro.getProperty("appKey"),
+							keyPro.getProperty("appSecret"),
+							obj.getString("mobile"), "", "", FormatType.json);
+					JSONObject objj = (JSONObject) JSONObject.parse(result
+							.getResult());
+					member = new Member();
+					member.setMobilePhone(obj.getString("mobile"));
+					member.setPassword(obj.getString("pwd"));
+					member.setImToken(objj.getString("token"));
+					member.setIsCompleted(0);
+					member.setStatus(MemberStatus.NORMAL);
+					member.setMemberType(MemberType.ORDINARY);
+					member.setMemberNumber(UUIDUtil.genUUIDString());
+					member.setVoip(Constant.UUCALL_GROUP
+							+ obj.getString("mobile"));
+					
+					Long id = repository.register(member);
+					
+					
+					Account account = new Account();
+					account.setAccountBalance(BigDecimal.ZERO);
+					account.setAccountNumber(member.getMobilePhone());
+					account.setChargingStandard(BigDecimal.ZERO);
+					account.setMemberNumber(member.getMemberNumber());
+					account.setCreateTime(new Date(System.currentTimeMillis()));
+					account.setRechargeTimes(0);
+					account.setSurplusCallDuration(360000);
+					account.setStatus(MemberStatus.NORMAL);
+					accountBean.register(account);
+
+					
+				} 
+				
+				MemberOrder mo = new MemberOrder();
+				 mo.setMemberNumber(member.getMemberNumber());
+				 mo.setOrderNo(OrderNoUtil.getOrderNo("OR"));
+				 mo.setOrderPrice("0");
+				 mo.setOrderTime(new Date());
+				 mo.setPackageDesc("尊享VIP畅享所有服务");
+				 mo.setPackageName("尊享VIP套餐");
+				 mo.setPackageNo("9999");
+				 mo.setPayWay("0");
+				 mo.setServiceTime(new Date());
+				 mo.setState(OrderStatus.FINISHED);
+				 mo.setUseState(OrderUseStatus.USING);
+				 mo.setUseDate(30);
+				 mo.setSurplusCallDuration(12000*30);
+				 mo.setPackageType("1");
+				 mo.setServiceEndTime(new Date(126,2,30));
+				 memberOrderBean.createOrder(mo);
+
+				 List<PackageProductContent> ppcs = packageProductContentBean.findByPackageNo(mo.getPackageNo());
+				 for (PackageProductContent packageProductContent : ppcs) {
+						MemberOrderUse mou = new MemberOrderUse();
+						mou.setOrderNo(mo.getOrderNo());
+						mou.setProductNo(packageProductContent.getProductNo());
+						mou.setTimes(packageProductContent.getTimes());
+						memberOrderUseBean.createMemberOrderUse(mou);
+					}
+				req.put("result", "success");
+			} else {
+				req.put("result", "fail");
+			}
+
+		} catch (Exception e) {
+			// Handle generic exceptions
+			log.info(e.getMessage());
+			req.put("result", "fail");
+			req.put("error_code", "3002");
+			req.put("error_msg", e.getMessage());
+		}
+		return req;
+	}
 	
 }
