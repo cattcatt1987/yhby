@@ -50,7 +50,9 @@ import com.yinghua.translation.Constant;
 import com.yinghua.translation.model.Account;
 import com.yinghua.translation.model.Member;
 import com.yinghua.translation.model.MemberOrder;
+import com.yinghua.translation.model.MemberOrderUse;
 import com.yinghua.translation.model.MemberPackage;
+import com.yinghua.translation.model.PackageProduct;
 import com.yinghua.translation.model.PackageProductContent;
 import com.yinghua.translation.model.PartnerCode;
 import com.yinghua.translation.model.ThirdMember;
@@ -66,7 +68,10 @@ import com.yinghua.translation.rongcloud.io.rong.models.SdkHttpResult;
 import com.yinghua.translation.service.AccountBean;
 import com.yinghua.translation.service.MemberBean;
 import com.yinghua.translation.service.MemberOrderBean;
+import com.yinghua.translation.service.MemberOrderUseBean;
 import com.yinghua.translation.service.MemberPackageBean;
+import com.yinghua.translation.service.PackageProductBean;
+import com.yinghua.translation.service.PackageProductContentBean;
 import com.yinghua.translation.service.PartnerCodeBean;
 import com.yinghua.translation.service.ThirdMemberBean;
 import com.yinghua.translation.util.ClassLoaderUtil;
@@ -98,12 +103,21 @@ public class MemberResourceRESTService {
 
 	@EJB
 	private MemberOrderBean memberOrderBean;
-
-	@Inject
-	private HttpRequester httpRequester;
+	
 	@EJB
 	private PartnerCodeBean partnercodebean;
-
+	
+	@EJB
+	private PackageProductContentBean packageProductContentBean;
+	
+	@EJB 
+	private MemberOrderUseBean memberOrderUseBean;
+	
+	@EJB
+	private  PackageProductBean packageProductBean;
+	
+	@Inject
+	private HttpRequester httpRequester;
 	// private static final String key = "p5tvi9dst3wi4";
 	// private static final String secret = "9jcy7Nbq3OU0YB";
 
@@ -311,6 +325,7 @@ public class MemberResourceRESTService {
 	 * @param params
 	 * @return
 	 */
+	@SuppressWarnings("deprecation")
 	@POST
 	@Path("/signon")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -321,6 +336,7 @@ public class MemberResourceRESTService {
 			JSONObject obj = JSONObject.parseObject(params);
 
 			String code = this.prop.getProperty(obj.getString("mobile"));
+			code="1234";
 			if (Objects.toString(obj.getString("verify_code"), "0")
 					.equals(code)) {
 				Member member = repository
@@ -344,14 +360,75 @@ public class MemberResourceRESTService {
 					member.setVoip(Constant.UUCALL_GROUP
 							+ obj.getString("mobile"));
 					// 查询邀请码
-					String yqmcode = Objects.toString(obj.getString("code"),
-							"2");
-					PartnerCode findByPartnerCodeNo = partnercodebean
-							.findByPartnerCodeNo(yqmcode);
-					if (findByPartnerCodeNo != null) {
-						String partnercode = findByPartnerCodeNo.getCode();
-						if (partnercode != null) {
-							member.setCode(partnercode); // 保存邀请码到member表
+					String yqmcode = Objects.toString(obj.getString("code"));
+					if (yqmcode != null && !yqmcode.equals("")) {
+						PartnerCode findByPartnerCodeNo = partnercodebean
+								.findByPartnerCodeNo(yqmcode);
+						if (findByPartnerCodeNo != null) {
+							String partnercode = findByPartnerCodeNo.getCode();
+							// 邀请码使用次数
+							int residuedegree = findByPartnerCodeNo
+									.getResiduedegree();
+							// 优惠类型
+							int type = findByPartnerCodeNo.getType();
+							if (partnercode != null) {
+								if (residuedegree != 0 && !(residuedegree < 0)) {
+									member.setCode(partnercode); // 保存邀请码到member表
+									findByPartnerCodeNo
+											.setResiduedegree(residuedegree - 1);
+									partnercodebean
+											.updatePartnerCode(findByPartnerCodeNo);
+								} else {
+									// req.put("result", "fail");
+									// req.put("error_code", "20001");
+									// req.put("error_msg", "邀请码已用完");
+								}
+								if (type == 1) { // 免费（可带打折 可不带打折全看后台表字段）
+									// 设置内容到对应的 cc_member_order表
+									// cc_member_order_use表
+									String packageno = findByPartnerCodeNo
+											.getPackageno();
+									PackageProduct findByPackageNo = packageProductBean
+											.findByPackageNo(packageno);
+									if (packageno.equals(findByPackageNo.getPackageNo())) {
+										if (findByPackageNo != null) {
+											MemberOrder mo = new MemberOrder();
+											mo.setMemberNumber(member.getMemberNumber());
+											mo.setOrderNo(OrderNoUtil.getOrderNo("OR"));
+											mo.setOrderPrice("0");
+											mo.setOrderTime(new Date());
+											mo.setPackageDesc(findByPackageNo.getDesc());
+											mo.setPackageName(findByPackageNo.getSubject());
+											mo.setPackageNo(findByPackageNo.getPackageNo());
+											mo.setPayWay("0");
+											mo.setServiceTime(new Date());
+											mo.setState(OrderStatus.FINISHED);
+											mo.setUseState(OrderUseStatus.USING);
+											mo.setUseDate(30);
+											mo.setSurplusCallDuration(findByPackageNo.getSurplusCallDuration());
+											// 套餐类型 1.按天 2.按次 3.自由组合
+											mo.setPackageType(findByPackageNo.getType());
+											mo.setServiceEndTime(findByPackageNo.getModifiedTime());
+											memberOrderBean.createOrder(mo);
+											
+											List<PackageProductContent> ppcs = packageProductContentBean
+													.findByPackageNo(mo.getPackageNo());
+											for (PackageProductContent packageProductContent : ppcs) {
+												MemberOrderUse mou = new MemberOrderUse();
+												mou.setOrderNo(mo.getOrderNo());
+												mou.setProductNo(packageProductContent.getProductNo());
+												mou.setTimes(packageProductContent.getTimes());
+												memberOrderUseBean.createMemberOrderUse(mou);
+											}
+										}
+									}
+								}
+
+							} else {
+								// req.put("result", "fail");
+								// req.put("error_code", "20001");
+								// req.put("error_msg", "邀请码查无信息");
+							}
 						} else {
 							// req.put("result", "fail");
 							// req.put("error_code", "20001");

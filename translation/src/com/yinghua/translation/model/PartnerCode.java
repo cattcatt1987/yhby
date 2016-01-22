@@ -32,7 +32,12 @@ public class PartnerCode implements Serializable{
 	private Date serviceStartTime;//合作开始时间
 	@Column(name="service_end_time")
 	private Date serviceEndTime;//合作有效截止时间
-	
+	@Column(name="residue_degree")
+	private int residuedegree;//剩余次数  <= 0不可使用
+	@Column(name="package_no")
+	private String packageno;//套餐编号
+	@Column(name="type")
+	private int type;//套餐类型  1 为免费（内包括打折） 2只打折
 	public Long getId() {
 		return id;
 	}
@@ -80,6 +85,26 @@ public class PartnerCode implements Serializable{
 	}
 	public void setServiceEndTime(Date serviceEndTime) {
 		this.serviceEndTime = serviceEndTime;
+	}
+	public int getResiduedegree() {
+		return residuedegree;
+	}
+	public void setResiduedegree(int residuedegree) {
+		this.residuedegree = residuedegree;
+	}
+	
+	public String getPackageno() {
+		return packageno;
+	}
+	public void setPackageno(String packageno) {
+		this.packageno = packageno;
+	}
+	
+	public int getType() {
+		return type;
+	}
+	public void setType(int type) {
+		this.type = type;
 	}
 	
 }

@@ -1002,12 +1002,11 @@ public class MemberPackageRESTService {
 			String code = findByMemberNo.getCode();
 			// 根据邀请码过期时间判断 是否有效
 			if (code != null && !code.equals("")) {
-				List<PartnerCode> partnercodelist = partnercodebean
-						.findByUid(code);
-				if (partnercodelist != null) {
-					Date serviceStartTime = partnercodelist.get(0)
+				 PartnerCode findByPartnerCodeNo = partnercodebean.findByPartnerCodeNo(code);
+				if (findByPartnerCodeNo != null) {
+					Date serviceStartTime = findByPartnerCodeNo
 							.getServiceStartTime();// 开始时间
-					Date serviceEndTime = partnercodelist.get(0)
+					Date serviceEndTime = findByPartnerCodeNo
 							.getServiceEndTime();// 结束时间
 					Date date = new Date();
 					SimpleDateFormat format = new SimpleDateFormat(
@@ -1023,7 +1022,7 @@ public class MemberPackageRESTService {
 					if (serviceStartTime.after(d) != true) {// 邀请码 开始时间
 						if (serviceEndTime.before(d) != true) { // 邀请码结束时间
 
-							String saleStrategyNo = partnercodelist.get(0)
+							String saleStrategyNo = findByPartnerCodeNo
 									.getSaleStrategyNo();// 得到邀请码表数据（优惠策略标识）
 							Preferential findByPreferentialNo = preferentialbean
 									.findByPreferentialNo(saleStrategyNo);// 查询优惠表
@@ -1052,6 +1051,13 @@ public class MemberPackageRESTService {
 						// req.put("error_code", "20001");
 						// req.put("error_msg", "邀请码未到激活时间");
 					}
+				}else {
+					req.put("result", "success");
+					req.put("preferential", 1);
+					req.put("error_code", "000000");
+					req.put("error_msg", "");
+					// req.put("error_code", "20001");
+					// req.put("error_msg", "查无邀请码");
 				}
 			} else {
 				req.put("result", "success");
