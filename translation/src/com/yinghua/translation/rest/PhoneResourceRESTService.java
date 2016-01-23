@@ -16,6 +16,7 @@
  */
 package com.yinghua.translation.rest;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URLDecoder;
@@ -86,7 +87,11 @@ import com.yinghua.translation.service.PayWeixinLogBean;
 import com.yinghua.translation.service.PaymentBean;
 import com.yinghua.translation.service.ProductBean;
 import com.yinghua.translation.util.ClassLoaderUtil;
+import com.yinghua.translation.util.HttpRequester;
+import com.yinghua.translation.util.HttpRespons;
+import com.yinghua.translation.util.LocationUtil;
 import com.yinghua.translation.util.OrderNoUtil;
+import com.yinghua.translation.util.PropertiesUtil;
 import com.yinghua.translation.util.UUIDUtil;
 
 @Path("/phoneService")
@@ -141,7 +146,12 @@ public class PhoneResourceRESTService
 	@EJB
 	private CommonDataBean commonDataBean;
 	
+	@Inject
+	private HttpRequester httpRequester;
+	
 	private Properties keyPro = ClassLoaderUtil.getProperties("key.properties");
+	
+	private Properties locationPro = ClassLoaderUtil.getProperties("location.properties");
 	/**
 	 * 查询服务记录
 	 * 
@@ -806,6 +816,106 @@ public class PhoneResourceRESTService
 		}
 
 		return req;
+	}
+	
+	/**
+	 * 发送用户地理位置
+	 * 
+	 * @param params
+	 * @return
+	 */
+	@POST
+	@Path("/sendLocation")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> sendLocation(String params)
+	{
+		JSONObject obj = JSONObject.parseObject(params);
+		String caller = obj.getString("caller");
+		String location = Objects.toString(obj.get("location"),"");
+		Map<String, Object> req = new HashMap<>();
+		try
+		{
+			if(caller!=null){
+				LocationUtil.writeProperties(caller, location);
+				req.put("result", "success");
+				req.put("error_code", "000000");
+				req.put("error_msg", "");
+			}else{
+				req.put("result", "fail");
+				req.put("error_code", "7001");
+				req.put("error_msg", "号码为空");
+			}
+		}
+		catch (Exception e)
+		{
+			log.info(e.getMessage());
+			req.put("result", "fail");
+			req.put("error_code", "7001");
+			req.put("error_msg", "写入异常");
+		}
+
+		return req;
+	}
+	
+	/**
+	 * 获取地理位置
+	 * @param callback
+	 * @param mobile
+	 * @return
+	 */
+	@POST
+	@GET
+	@Path("/getUserLocation")
+//	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
+	public String getUserLocation(@QueryParam("callback") String callback,@QueryParam("mobile") String mobile) {
+//		System.out.println(callback);
+		String result = callback;
+//		Map<String, Object> req = new HashMap<>();
+//		req.put("mobile", mobile);
+		
+//		String jsonStr = JSONObject.toJSONString(req);
+		String jsonStr = "";
+		if(mobile!=null){
+			jsonStr = locationPro.getProperty(mobile);
+		}
+//		System.out.println(result+"("+jsonStr+");");
+		return result+"("+jsonStr+");";
+	}
+	
+	/**
+	 * 获取地理位置
+	 * @param callback
+	 * @param mobile
+	 * @return
+	 */
+	@POST
+	@GET
+	@Path("/bindUserLocation")
+//	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
+	public String bindUserLocation(@QueryParam("callback") String callback,@QueryParam("lastname") String lastname,@QueryParam("firstname") String firstname,@QueryParam("type") String type,
+			@QueryParam("streetnumber") String streetnumber,@QueryParam("streetname") String streetname,@QueryParam("city") String city,@QueryParam("state") String state,@QueryParam("zip") String zip) {
+//		System.out.println(callback);
+		String result = callback;
+		String jsonStr = "";
+		StringBuilder url = new StringBuilder();
+		url.append("http://52.33.130.20:8080/CallHandler/UpdateE911AddressPrototype?");
+		url.append("lastname=").append(lastname).append("&firstname=").append(firstname);
+		url.append("&type=").append(type).append("&streetnumber=").append(streetnumber).append("&streetname=").append(streetname);
+		url.append("&city=").append(city).append("&state=").append(state).append("&zip=").append(zip);
+		
+		try {
+			HttpRespons hr = httpRequester.sendGet(url.toString());
+			if(hr.getContent()!=null)jsonStr=hr.getContent();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+//		String jsonStr = JSONObject.toJSONString(req);
+//		System.out.println(result+"("+jsonStr+");");
+		return result+"("+jsonStr+");";
 	}
 	
 	/**
