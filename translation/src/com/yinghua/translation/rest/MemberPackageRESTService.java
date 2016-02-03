@@ -179,7 +179,7 @@ public class MemberPackageRESTService {
 	}
 
 	/**
-	 * 查询套餐列表
+	 * 获取安卓当前版本号
 	 * 
 	 * @param params
 	 * @return
@@ -210,6 +210,33 @@ public class MemberPackageRESTService {
 		return req;
 	}
 
+	/**
+	 * 获取安卓当前版本号
+	 * 
+	 * @param params
+	 * @return
+	 */
+	@POST
+	@Path("/getIosVersion")
+//	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> getIosVersion(String params) {
+		Map<String, Object> req = new HashMap<>();
+//		JSONObject obj = JSONObject.parseObject(params);
+//		String version = Objects.toString(obj.getString("version"), "0");
+		if (keyPro.getProperty("iosVersion")!=null&&keyPro.getProperty("iosVersion").length()>0) {
+			req.put("version", keyPro.getProperty("iosVersion"));
+			req.put("result", "success");
+			req.put("error_code", "000000");
+			req.put("error_msg", "请求成功");
+		} else {
+			req.put("result", "fail");
+			req.put("error_code", "2001");
+			req.put("error_msg", "获取版本失败");
+		}
+		return req;
+	}
+	
 	/**
 	 * 查询用户订购列表
 	 * 

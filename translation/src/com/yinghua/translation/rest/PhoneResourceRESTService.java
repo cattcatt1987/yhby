@@ -19,7 +19,9 @@ package com.yinghua.translation.rest;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.net.URI;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -43,6 +45,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
@@ -889,14 +897,16 @@ public class PhoneResourceRESTService
 	 * @param callback
 	 * @param mobile
 	 * @return
+	 * @throws UnsupportedEncodingException 
 	 */
 	@POST
 	@GET
 	@Path("/bindUserLocation")
 //	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.TEXT_PLAIN)
+	@Encoded
 	public String bindUserLocation(@QueryParam("callback") String callback,@QueryParam("lastname") String lastname,@QueryParam("firstname") String firstname,@QueryParam("type") String type,
-			@QueryParam("streetnumber") String streetnumber,@QueryParam("streetname") String streetname,@QueryParam("city") String city,@QueryParam("state") String state,@QueryParam("zip") String zip) {
+			@QueryParam("streetnumber") String streetnumber,@QueryParam("streetname") String streetname,@QueryParam("city") String city,@QueryParam("state") String state,@QueryParam("zip") String zip) throws UnsupportedEncodingException {
 //		System.out.println(callback);
 		String result = callback;
 		String jsonStr = "";
@@ -905,11 +915,11 @@ public class PhoneResourceRESTService
 		url.append("lastname=").append(lastname).append("&firstname=").append(firstname);
 		url.append("&type=").append(type).append("&streetnumber=").append(streetnumber).append("&streetname=").append(streetname);
 		url.append("&city=").append(city).append("&state=").append(state).append("&zip=").append(zip);
-		
 		try {
-			HttpRespons hr = httpRequester.sendGet(url.toString());
+//			System.out.println(URI.create(url.toString()).toASCIIString());
+			HttpRespons hr = httpRequester.sendGet(URI.create(url.toString()).toASCIIString());
 			if(hr.getContent()!=null)jsonStr=hr.getContent();
-			
+//			System.out.println(jsonStr);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

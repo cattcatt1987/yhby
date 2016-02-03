@@ -48,6 +48,7 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import com.alibaba.fastjson.JSONObject;
 import com.yinghua.translation.Constant;
 import com.yinghua.translation.model.Account;
+import com.yinghua.translation.model.FreeCode;
 import com.yinghua.translation.model.Member;
 import com.yinghua.translation.model.MemberOrder;
 import com.yinghua.translation.model.MemberOrderUse;
@@ -66,6 +67,7 @@ import com.yinghua.translation.rongcloud.io.rong.ApiHttpClient;
 import com.yinghua.translation.rongcloud.io.rong.models.FormatType;
 import com.yinghua.translation.rongcloud.io.rong.models.SdkHttpResult;
 import com.yinghua.translation.service.AccountBean;
+import com.yinghua.translation.service.FreeCodeBean;
 import com.yinghua.translation.service.MemberBean;
 import com.yinghua.translation.service.MemberOrderBean;
 import com.yinghua.translation.service.MemberOrderUseBean;
@@ -106,6 +108,9 @@ public class MemberResourceRESTService {
 	
 	@EJB
 	private PartnerCodeBean partnercodebean;
+	
+	@EJB
+	private FreeCodeBean freeCodeBean;
 	
 	@EJB
 	private PackageProductContentBean packageProductContentBean;
@@ -325,7 +330,6 @@ public class MemberResourceRESTService {
 	 * @param params
 	 * @return
 	 */
-	@SuppressWarnings("deprecation")
 	@POST
 	@Path("/signon")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -336,7 +340,6 @@ public class MemberResourceRESTService {
 			JSONObject obj = JSONObject.parseObject(params);
 
 			String code = this.prop.getProperty(obj.getString("mobile"));
-			code="1234";
 			if (Objects.toString(obj.getString("verify_code"), "0")
 					.equals(code)) {
 				Member member = repository
@@ -362,79 +365,63 @@ public class MemberResourceRESTService {
 					// 查询邀请码
 					String yqmcode = Objects.toString(obj.getString("code"));
 					if (yqmcode != null && !yqmcode.equals("")) {
-						PartnerCode findByPartnerCodeNo = partnercodebean
+						PartnerCode findByPartnerCodeNo = partnercodebean 
 								.findByPartnerCodeNo(yqmcode);
-						if (findByPartnerCodeNo != null) {
+						if (findByPartnerCodeNo != null && new Date().getTime()<findByPartnerCodeNo.getServiceEndTime().getTime() 
+								&& new Date().getTime()>findByPartnerCodeNo.getServiceStartTime().getTime()&&findByPartnerCodeNo.getResiduedegree()>0) {
 							String partnercode = findByPartnerCodeNo.getCode();
 							// 邀请码使用次数
-							int residuedegree = findByPartnerCodeNo
-									.getResiduedegree();
+							int residuedegree = findByPartnerCodeNo.getResiduedegree();
 							// 优惠类型
 							int type = findByPartnerCodeNo.getType();
-							if (partnercode != null) {
-								if (residuedegree != 0 && !(residuedegree < 0)) {
-									member.setCode(partnercode); // 保存邀请码到member表
-									findByPartnerCodeNo
-											.setResiduedegree(residuedegree - 1);
-									partnercodebean
-											.updatePartnerCode(findByPartnerCodeNo);
-								} else {
-									// req.put("result", "fail");
-									// req.put("error_code", "20001");
-									// req.put("error_msg", "邀请码已用完");
-								}
-								if (type == 1) { // 免费（可带打折 可不带打折全看后台表字段）
-									// 设置内容到对应的 cc_member_order表
-									// cc_member_order_use表
-									String packageno = findByPartnerCodeNo
-											.getPackageno();
-									PackageProduct findByPackageNo = packageProductBean
-											.findByPackageNo(packageno);
-									if (packageno.equals(findByPackageNo.getPackageNo())) {
-										if (findByPackageNo != null) {
-											MemberOrder mo = new MemberOrder();
-											mo.setMemberNumber(member.getMemberNumber());
-											mo.setOrderNo(OrderNoUtil.getOrderNo("OR"));
-											mo.setOrderPrice("0");
-											mo.setOrderTime(new Date());
-											mo.setPackageDesc(findByPackageNo.getDesc());
-											mo.setPackageName(findByPackageNo.getSubject());
-											mo.setPackageNo(findByPackageNo.getPackageNo());
-											mo.setPayWay("0");
-											mo.setServiceTime(new Date());
-											mo.setState(OrderStatus.FINISHED);
-											mo.setUseState(OrderUseStatus.USING);
-											mo.setUseDate(30);
-											mo.setSurplusCallDuration(findByPackageNo.getSurplusCallDuration());
-											// 套餐类型 1.按天 2.按次 3.自由组合
-											mo.setPackageType(findByPackageNo.getType());
-											mo.setServiceEndTime(findByPackageNo.getModifiedTime());
-											memberOrderBean.createOrder(mo);
-											
-											List<PackageProductContent> ppcs = packageProductContentBean
-													.findByPackageNo(mo.getPackageNo());
-											for (PackageProductContent packageProductContent : ppcs) {
-												MemberOrderUse mou = new MemberOrderUse();
-												mou.setOrderNo(mo.getOrderNo());
-												mou.setProductNo(packageProductContent.getProductNo());
-												mou.setTimes(packageProductContent.getTimes());
-												memberOrderUseBean.createMemberOrderUse(mou);
-											}
-										}
+							member.setCode(partnercode); // 保存邀请码到member表
+							findByPartnerCodeNo.setResiduedegree(residuedegree - 1);
+							partnercodebean.updatePartnerCode(findByPartnerCodeNo);
+							if (type == 1) { // 免费（可带打折 可不带打折全看后台表字段）
+								// 设置内容到对应的 cc_member_order表
+								// cc_member_order_use表
+								PackageProduct findByPackageNo = packageProductBean
+										.findByPackageNo(findByPartnerCodeNo.getPackageno());
+								if (findByPackageNo != null) {
+									MemberOrder mo = new MemberOrder();
+									mo.setMemberNumber(member.getMemberNumber());
+									mo.setOrderNo(OrderNoUtil.getOrderNo("OR"));
+									mo.setOrderPrice("0");
+									mo.setOrderTime(new Date());
+									mo.setPackageDesc(findByPackageNo.getDesc());
+									mo.setPackageName(findByPackageNo.getSubject());
+									mo.setPackageNo(findByPackageNo.getPackageNo());
+									mo.setPayWay("0");
+									mo.setServiceTime(new Date());
+									mo.setState(OrderStatus.FINISHED);
+									mo.setUseState(OrderUseStatus.USING);
+									mo.setUseDate(30);
+									mo.setSurplusCallDuration(findByPackageNo.getSurplusCallDuration());
+									// 套餐类型 1.按天 2.按次 3.自由组合
+									mo.setPackageType(findByPackageNo.getType());
+									mo.setServiceEndTime(findByPackageNo.getModifiedTime());
+									memberOrderBean.createOrder(mo);
+									
+									List<PackageProductContent> ppcs = packageProductContentBean
+											.findByPackageNo(mo.getPackageNo());
+									for (PackageProductContent packageProductContent : ppcs) {
+										MemberOrderUse mou = new MemberOrderUse();
+										mou.setOrderNo(mo.getOrderNo());
+										mou.setProductNo(packageProductContent.getProductNo());
+										mou.setTimes(packageProductContent.getTimes());
+										memberOrderUseBean.createMemberOrderUse(mou);
 									}
 								}
-
-							} else {
-								// req.put("result", "fail");
-								// req.put("error_code", "20001");
-								// req.put("error_msg", "邀请码查无信息");
 							}
+							req.put("bind_code", "000000");
+							req.put("bind_msg", "邀请码绑定成功");
 						} else {
-							// req.put("result", "fail");
-							// req.put("error_code", "20001");
-							// req.put("error_msg", "邀请码查无信息");
+							// 邀请码无效或不存在
+							 req.put("bind_code", "2000");
+							 req.put("bind_msg", "邀请码无效");
 						}
 					}
+					
 					Long id = repository.register(member);
 					Account account = new Account();
 					account.setAccountBalance(BigDecimal.ZERO);
@@ -446,23 +433,6 @@ public class MemberResourceRESTService {
 					account.setSurplusCallDuration(36000);
 					account.setStatus(MemberStatus.NORMAL);
 					accountBean.register(account);
-
-					// MemberOrder mo = new MemberOrder();
-					// mo.setMemberNumber(member.getMemberNumber());
-					// mo.setOrderNo(OrderNoUtil.getOrderNo("OR"));
-					// mo.setOrderPrice("0");
-					// mo.setOrderTime(new Date());
-					// mo.setPackageDesc("问路、打车、租车、餐饮、退税、购物、酒店、购票、其他");
-					// mo.setPackageName("生活服务套餐");
-					// mo.setPackageNo("1002");
-					// mo.setPayWay("0");
-					// mo.setServiceTime(new Date());
-					// mo.setState(OrderStatus.FINISHED);
-					// mo.setUseState(OrderUseStatus.USING);
-					// mo.setUseDate(30);
-					// mo.setSurplusCallDuration(8000*30);
-					// mo.setPackageType("1");
-					// memberOrderBean.createOrder(mo);
 
 				} else {
 					// 用户存在，返回信息
@@ -535,7 +505,6 @@ public class MemberResourceRESTService {
 				req.put("im_token", "");
 				req.put("error_code", "3002");
 				req.put("error_msg", "验证码错误");
-
 			}
 
 		} catch (Exception e) {
@@ -545,6 +514,141 @@ public class MemberResourceRESTService {
 			req.put("error_msg", e.getMessage());
 		}
 		return req;
+	}
+
+	
+	/**
+	 * 提交优惠码
+	 * 
+	 * @param params
+	 * @return
+	 */
+	@POST
+	@Path("/sendCode")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> sendCode(String params) {
+		Map<String, Object> req = new HashMap<>();
+		JSONObject obj = JSONObject.parseObject(params);
+//		String uid = obj.getString("uno");
+		Member member = repository.findByMemberNo(Objects.toString(
+				obj.getString("uno"), "0"));
+		String yqmcode = Objects.toString(obj.getString("code"),"0");
+		String result = "fail";
+		String error_code = "";
+		String error_msg = "";
+		if(member!=null){
+			//确定码是邀请码还是cdk 
+			PartnerCode partnerCode = partnercodebean 
+					.findByPartnerCodeNo(yqmcode);
+			if(partnerCode!=null){//是邀请码
+				boolean isOk = false;
+				if(member.getCode()!=null&&member.getCode().length()>0){
+					PartnerCode userPartnerCode = partnercodebean.findByPartnerCodeNo(member.getCode());
+					if(userPartnerCode!=null&&userPartnerCode.getServiceEndTime().getTime()<new Date().getTime()){
+						isOk = true;
+					}
+				}else{
+					isOk = true;
+				}
+				if(isOk){
+					if (new Date().getTime()<partnerCode.getServiceEndTime().getTime() 
+							&& new Date().getTime()>partnerCode.getServiceStartTime().getTime()&&partnerCode.getResiduedegree()>0) {
+						String partnercode = partnerCode.getCode();
+						// 邀请码使用次数
+						int residuedegree = partnerCode.getResiduedegree();
+						// 优惠类型
+						member.setCode(partnercode); // 保存邀请码到member表
+						partnerCode.setResiduedegree(residuedegree - 1);
+						partnercodebean.updatePartnerCode(partnerCode);
+						if (partnerCode.getType() == 1) { // 免费（可带打折 可不带打折全看后台表字段）
+							// 设置内容到对应的 cc_member_order表
+							// cc_member_order_use表
+							PackageProduct findByPackageNo = packageProductBean
+									.findByPackageNo(partnerCode.getPackageno());
+							if (findByPackageNo != null) {
+								addProduct2Member(findByPackageNo,member);
+							}
+						}
+						repository.updateMember(member);
+						result = "success";
+						error_code = "000000";
+						error_msg = "邀请码绑定成功";
+					} else {
+						// 邀请码无效
+						error_code = "2000";
+						error_msg = "邀请码无效";
+					}
+				}else{
+					error_code = "7000";
+					error_msg = "已有邀请码";
+				}
+			}else{
+				FreeCode freeCode = freeCodeBean.findByCode(yqmcode);
+				if(freeCode!=null&&freeCode.getUseStatus()==1){
+					PackageProduct findByPackageNo = packageProductBean
+							.findByPackageNo(freeCode.getPackageNo());
+					if (findByPackageNo != null) {
+						freeCode.setUseStatus(2);
+						freeCode.setUno(member.getMemberNumber());
+						freeCodeBean.updateFreeCode(freeCode);
+						addProduct2Member(findByPackageNo,member);
+						result = "success";
+						error_code = "000000";
+						error_msg = "优惠码使用成功";
+					}else{
+						error_code = "2001";
+						error_msg = "优惠码异常";
+					}
+				}else{
+					error_code = "2000";
+					error_msg = "优惠码不存在或已使用";
+				}
+			}
+		}else{
+			error_code = "7001";
+			error_msg = "用户不存在";
+		}
+		
+		req.put("result", result);
+		req.put("error_code", error_code);
+		req.put("error_msg", error_msg); 
+		
+		return req;
+	
+	}
+	
+	private void addProduct2Member(PackageProduct findByPackageNo, Member member) {
+		MemberOrder mo = new MemberOrder();
+		mo.setMemberNumber(member.getMemberNumber());
+		mo.setOrderNo(OrderNoUtil.getOrderNo("OR"));
+		mo.setOrderPrice("0");
+		mo.setOrderTime(new Date());
+		mo.setPackageDesc(findByPackageNo.getDesc());
+		mo.setPackageName(findByPackageNo.getSubject());
+		mo.setPackageNo(findByPackageNo.getPackageNo());
+		mo.setPayWay("0");
+		mo.setServiceTime(new Date());
+		mo.setState(OrderStatus.FINISHED);
+		mo.setUseState(OrderUseStatus.USING);
+		mo.setUseDate(30);
+		mo.setSurplusCallDuration(findByPackageNo.getSurplusCallDuration());
+		// 套餐类型 1.按天 2.按次 3.自由组合
+		mo.setPackageType(findByPackageNo.getType());
+		mo.setServiceEndTime(findByPackageNo.getModifiedTime());
+		memberOrderBean.createOrder(mo);
+		
+		List<PackageProductContent> ppcs = packageProductContentBean
+				.findByPackageNo(mo.getPackageNo());
+		for (PackageProductContent packageProductContent : ppcs) {
+			
+			MemberOrderUse mou = new MemberOrderUse();
+			mou.setOrderNo(mo.getOrderNo());
+			mou.setProductNo(packageProductContent.getProductNo());
+			mou.setTimes(packageProductContent.getTimes());
+			memberOrderUseBean.createMemberOrderUse(mou);
+		}
+		
 	}
 
 	/**

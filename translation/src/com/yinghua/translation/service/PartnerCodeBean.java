@@ -63,7 +63,7 @@ public class PartnerCodeBean extends AbstractFacade<PartnerCode> {
 		criteria.select(partnercode).where(
 				cb.equal(partnercode.get("code"), code));
 		return em.createQuery(criteria).getResultList();
-	}
+	} 
 	
 	public PartnerCode findByPartnerCodeNo(String partnerCode)
 	{
