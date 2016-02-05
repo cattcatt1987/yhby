@@ -1053,12 +1053,16 @@ public class MemberPackageRESTService {
 									.getSaleStrategyNo();// 得到邀请码表数据（优惠策略标识）
 							Preferential findByPreferentialNo = preferentialbean
 									.findByPreferentialNo(saleStrategyNo);// 查询优惠表
-							BigDecimal preferential = findByPreferentialNo
-									.getPreferential();// 优惠参数
-							String describe = findByPreferentialNo
-									.getDescribe();//优惠描述
-							req.put("preferential", preferential);
-							req.put("describe", describe);//优惠描述
+							if(findByPreferentialNo!=null){
+								BigDecimal preferential = findByPreferentialNo
+										.getPreferential();// 优惠参数
+								String describe = findByPreferentialNo
+										.getDescribe();//优惠描述
+								req.put("preferential", preferential);
+								req.put("describe", describe);//优惠描述
+							}else{
+								req.put("preferential", 1);
+							}
 							req.put("result", "success");
 							req.put("error_code", "000000");
 							req.put("error_msg", "");

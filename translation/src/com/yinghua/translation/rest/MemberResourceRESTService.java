@@ -362,6 +362,7 @@ public class MemberResourceRESTService {
 					member.setMemberNumber(UUIDUtil.genUUIDString());
 					member.setVoip(Constant.UUCALL_GROUP
 							+ obj.getString("mobile"));
+					member.setCreateTime(new Date());
 					// 查询邀请码
 					String yqmcode = Objects.toString(obj.getString("code"));
 					if (yqmcode != null && !yqmcode.equals("")) {
