@@ -1,17 +1,11 @@
 package com.yinghua.translation.rest;
 
-import java.io.IOException;
 import java.math.BigDecimal;
-import java.net.URLEncoder;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.UUID;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
@@ -27,16 +21,17 @@ import com.alibaba.fastjson.JSONObject;
 import com.yinghua.translation.Constant;
 import com.yinghua.translation.handler.ServiceNoHandlerFactory;
 import com.yinghua.translation.model.Account;
+import com.yinghua.translation.model.BizCallRecord;
+import com.yinghua.translation.model.BizServiceData;
 import com.yinghua.translation.model.CallRecord;
 import com.yinghua.translation.model.LanuageTariff;
 import com.yinghua.translation.model.Member;
-import com.yinghua.translation.model.MemberOrder;
 import com.yinghua.translation.model.MemberPackage;
-import com.yinghua.translation.model.TimedTask;
 import com.yinghua.translation.model.enumeration.MemberType;
-import com.yinghua.translation.model.enumeration.OrderUseStatus;
 import com.yinghua.translation.service.AccountBean;
 import com.yinghua.translation.service.BaseProductBean;
+import com.yinghua.translation.service.BizCallRecordBean;
+import com.yinghua.translation.service.BizServiceDataBean;
 import com.yinghua.translation.service.CallHistoryBean;
 import com.yinghua.translation.service.LanuageTariffBean;
 import com.yinghua.translation.service.MemberBean;
@@ -46,9 +41,7 @@ import com.yinghua.translation.service.MemberPackageBean;
 import com.yinghua.translation.service.TimedTaskBean;
 import com.yinghua.translation.util.ClassLoaderUtil;
 import com.yinghua.translation.util.HttpRequester;
-import com.yinghua.translation.util.HttpRespons;
-import com.yinghua.translation.util.PropertiesUtil;
-import com.yinghua.translation.util.RandomNum;
+import com.yinghua.translation.util.OrderNoUtil;
 
 @Path("/interface")
 @RequestScoped
@@ -78,6 +71,12 @@ public class TranslateResourceRESTService
 	
 	@EJB
 	private BaseProductBean baseProductBean;
+	
+	@EJB
+	private BizCallRecordBean bizCallRecordBean;
+	
+	@EJB
+	private BizServiceDataBean bizServiceDataBean;
 	
 	@EJB
 	private MemberBean memberBean;
@@ -602,4 +601,139 @@ public class TranslateResourceRESTService
 		return req;
 	}
 
+	/**
+	 * 获取滴滴业务数据接口
+	 * 
+	 * @param params
+	 * @return
+	 */
+	@POST
+	@Path("/getDDServiceData")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> getDDServiceData(String params)
+	{
+		Map<String, Object> req = new HashMap<>();
+		JSONObject obj = JSONObject.parseObject(params);
+		String phone = Objects.toString(obj.get("phone"), "");
+		String callSign = Objects.toString(obj.get("call_sign"), "");
+		String result = "fail";
+		String errorMsg = "";
+		//调用滴滴接口
+		
+		BizServiceData bizServiceData = bizServiceDataBean.findByPhone(phone);
+		
+		
+//		bizServiceDataBean.register(bizServiceData);
+		
+		//返回给CC
+		
+		if(bizServiceData!=null){
+			bizServiceData.setCallSign(callSign);
+			bizServiceData.setOrderTime(new Date());
+			bizServiceData.setCreateTime(new Date());
+			bizServiceDataBean.updateBizServiceData(bizServiceData);
+			result = "success";
+		}else{
+			bizServiceData = new BizServiceData();
+//			bizServiceData.setOrderNum(OrderNoUtil.getOrderNo("DD"));
+//			bizServiceData.setPhone(phone);
+//			bizServiceData.setDriverPhone("18601270952");
+//			bizServiceData.setLanguage("EN");
+//			bizServiceData.setStarting("W. 3rd Ring Road North");
+//			bizServiceData.setDestination("W. 2nd Ring Road North");
+//			bizServiceData.setLocation("W. 3rd Ring Road North");
+//			bizServiceData.setOrderTime(new Date());
+//			bizServiceData.setCreateTime(new Date());
+//			bizServiceData.setCallSign(callSign);
+//			bizServiceDataBean.register(bizServiceData);
+			errorMsg="查询失败";
+		}
+		
+		req.put("phone", bizServiceData.getPhone());
+		req.put("order_num", bizServiceData.getOrderNum());
+		req.put("language", bizServiceData.getLanguage());
+		req.put("driver_phone", bizServiceData.getDriverPhone());
+		req.put("starting", bizServiceData.getStarting());
+		req.put("destination", bizServiceData.getDestination());
+		req.put("location", bizServiceData.getLocation());
+		
+		req.put("result", result);
+		req.put("error_code", "000000");
+		req.put("error_msg", errorMsg);
+		
+		System.out.println("呼叫中心获取滴滴业务数据信息");
+		
+		return req;
+	}
+	
+	/**
+	 * 发送通话结束业务数据接口
+	 * 
+	 * @param params
+	 * @return
+	 */
+	@POST
+	@Path("/postCallServiceData")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> postCallServiceData(String params)
+	{
+		Map<String, Object> req = new HashMap<>();
+		JSONObject obj = JSONObject.parseObject(params);
+		String phone = Objects.toString(obj.get("phone"), "");
+		String driverPhone = Objects.toString(obj.get("driver_phone"), "null");
+		String callSign = Objects.toString(obj.get("call_sign"), "");
+		String orderNum = Objects.toString(obj.get("order_num"), "");
+		Long startTime = 0L;
+		Long billingStartTime = 0L;
+		Long endTime = 0L;
+		if(obj.get("start_time")!=null){
+			startTime = obj.getLongValue("start_time");
+		}
+		if(obj.get("billing_start_time")!=null){
+			billingStartTime = obj.getLongValue("billing_start_time");
+		}
+		if(obj.get("end_time")!=null){
+			endTime = obj.getLongValue("end_time");
+		}
+		
+		String workerId = Objects.toString(obj.get("worker_id"), "");
+
+		String language = Objects.toString(obj.get("language"), "");
+		
+		BizCallRecord bizCallRecord = new BizCallRecord();
+		
+		bizCallRecord.setPhone(phone);
+		bizCallRecord.setDriverPhone(driverPhone);
+		bizCallRecord.setCallSign(callSign);
+		bizCallRecord.setOrderNum(orderNum);
+		bizCallRecord.setStartTime(new Date(startTime));
+		bizCallRecord.setBillingStartTime(new Date(billingStartTime));
+		bizCallRecord.setEndTime(new Date(endTime));
+		bizCallRecord.setWorkerId(workerId);
+		bizCallRecord.setLanguage(language);
+		
+		bizCallRecordBean.register(bizCallRecord);
+		
+		int time = 0;
+		if(billingStartTime>0){
+			long de = endTime - billingStartTime + (1000 * (60 -1));
+			time = (int) ((de % (1000 * 60 * 60)) / (1000 * 60)) ;
+		}
+		
+//		System.out.println(bizCallRecord.getPhone());
+		
+		System.out.println("时长： "+time+" 分钟");
+		//
+		
+		req.put("result", "success");
+		req.put("error_code", "000000");
+		req.put("error_msg", "");
+
+		System.out.println("发送通话结束业务数据接口调用成功");
+		
+		return req;
+	}
+	
 }
